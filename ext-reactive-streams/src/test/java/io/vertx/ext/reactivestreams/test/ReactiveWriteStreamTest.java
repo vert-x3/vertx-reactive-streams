@@ -42,7 +42,7 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
 
     List<Buffer> buffers = createRandomBuffers(4);
     for (Buffer buffer: buffers) {
-      rws.writeBuffer(buffer);
+      rws.write(buffer);
     }
 
     assertTrue(subscriber.buffers.isEmpty());
@@ -69,7 +69,7 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
 
     List<Buffer> buffers = createRandomBuffers(4);
     for (Buffer buffer: buffers) {
-      rws.writeBuffer(buffer);
+      rws.write(buffer);
     }
 
     assertEquals(3, subscriber.buffers.size());
@@ -102,7 +102,7 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
     subscriber.subscription.request(2);
 
     Buffer buff = TestUtils.randomBuffer(maxSize + 100);
-    rws.writeBuffer(buff);
+    rws.write(buff);
 
     assertEquals(2, subscriber.buffers.size());
     assertEquals(buff.slice(0, maxSize), subscriber.buffers.get(0));
@@ -123,7 +123,7 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
 
     List<Buffer> buffers = createRandomBuffers(10);
     for (Buffer buffer: buffers) {
-      rws.writeBuffer(buffer);
+      rws.write(buffer);
     }
 
     assertEquals(0, subscriber1.buffers.size());
@@ -214,10 +214,10 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
     MySubscriber subscriber = new MySubscriber();
     rws.subscribe(subscriber);
     Buffer buff = TestUtils.randomBuffer(writeQueueMaxSize - 1);
-    rws.writeBuffer(buff);
+    rws.write(buff);
     assertFalse(rws.writeQueueFull());
     Buffer buff2 = TestUtils.randomBuffer(100);
-    rws.writeBuffer(buff2);
+    rws.write(buff2);
     assertTrue(rws.writeQueueFull());
     rws.drainHandler(v -> {
       assertFalse(rws.writeQueueFull());

@@ -53,7 +53,7 @@ public class ReactiveWriteStreamImpl implements ReactiveWriteStream {
   }
 
   @Override
-  public ReactiveWriteStreamImpl writeBuffer(Buffer data) {
+  public ReactiveWriteStreamImpl write(Buffer data) {
     checkThread();
     if (data.length() > maxBufferSize) {
       splitBuffers(data);
