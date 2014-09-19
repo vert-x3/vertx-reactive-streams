@@ -51,8 +51,7 @@ public class ReactiveReadStreamImpl implements ReactiveReadStream {
     this(DEFAULT_BUFFER_REQUEST_BATCH_SIZE);
   }
 
-  @Override
-  public ReactiveReadStream dataHandler(Handler<Buffer> handler) {
+  public ReactiveReadStream handler(Handler<Buffer> handler) {
     checkThread();
     this.dataHandler = handler;
     if (dataHandler != null && !paused) {

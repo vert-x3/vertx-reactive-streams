@@ -26,7 +26,7 @@ import org.reactivestreams.Publisher;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
-public interface ReactiveWriteStream extends WriteStream<ReactiveWriteStream>, Publisher<Buffer> {
+public interface ReactiveWriteStream extends WriteStream<ReactiveWriteStream, Buffer>, Publisher<Buffer> {
 
   ReactiveWriteStream setBufferMaxSize(int maxBufferSize);
 

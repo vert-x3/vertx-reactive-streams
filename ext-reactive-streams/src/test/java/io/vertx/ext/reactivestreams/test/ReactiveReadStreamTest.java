@@ -50,7 +50,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     assertNotNull(publisher.subscription);
     assertEquals(0, publisher.subscription.requestedTimes);
     List<Buffer> received = new ArrayList<>();
-    rws.dataHandler(received::add);
+    rws.handler(received::add);
     assertEquals(1, publisher.subscription.requestedTimes);
     assertEquals(ReactiveReadStream.DEFAULT_BUFFER_REQUEST_BATCH_SIZE, publisher.subscription.requested);
     int numBuffers = 4;
@@ -75,7 +75,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     assertEquals(0, publisher.subscription.requestedTimes);
     List<Buffer> received = new ArrayList<>();
     rws.pause();
-    rws.dataHandler(received::add);
+    rws.handler(received::add);
     assertEquals(0, publisher.subscription.requestedTimes);
     assertEquals(0, publisher.subscription.requested);
 
@@ -104,7 +104,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     assertNotNull(publisher.subscription);
     assertEquals(0, publisher.subscription.requestedTimes);
     List<Buffer> received = new ArrayList<>();
-    rws.dataHandler(buff -> {
+    rws.handler(buff -> {
       received.add(buff);
       rws.pause();
     });
@@ -130,9 +130,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     assertNotNull(publisher.subscription);
     assertEquals(0, publisher.subscription.requestedTimes);
     List<Buffer> received = new ArrayList<>();
-    rws.dataHandler(buff -> {
-      received.add(buff);
-    });
+    rws.handler(received::add);
     assertEquals(1, publisher.subscription.requestedTimes);
     assertEquals(ReactiveReadStream.DEFAULT_BUFFER_REQUEST_BATCH_SIZE, publisher.subscription.requested);
     int numBuffers = 4;
@@ -170,7 +168,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     assertNotNull(publisher.subscription);
     assertEquals(0, publisher.subscription.requestedTimes);
     List<Buffer> received = new ArrayList<>();
-    rws.dataHandler(buff -> {
+    rws.handler(buff -> {
       rws.pause();
       rws.resume();
       received.add(buff);

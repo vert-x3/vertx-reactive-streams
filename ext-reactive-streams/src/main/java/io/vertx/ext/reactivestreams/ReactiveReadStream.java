@@ -25,7 +25,7 @@ import org.reactivestreams.Subscriber;
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
-public interface ReactiveReadStream extends ReadStream<ReactiveReadStream>, Subscriber<Buffer> {
+public interface ReactiveReadStream extends ReadStream<ReactiveReadStream, Buffer>, Subscriber<Buffer> {
 
   static final int DEFAULT_BUFFER_REQUEST_BATCH_SIZE = 4;
 
