@@ -16,6 +16,7 @@
 
 package io.vertx.ext.reactivestreams;
 
+import io.vertx.core.Handler;
 import io.vertx.core.ServiceHelper;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
@@ -26,9 +27,21 @@ import org.reactivestreams.Publisher;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
-public interface ReactiveWriteStream extends WriteStream<ReactiveWriteStream, Buffer>, Publisher<Buffer> {
+public interface ReactiveWriteStream extends WriteStream<Buffer>, Publisher<Buffer> {
 
   ReactiveWriteStream setBufferMaxSize(int maxBufferSize);
+
+  @Override
+  ReactiveWriteStream exceptionHandler(Handler<Throwable> handler);
+
+  @Override
+  ReactiveWriteStream write(Buffer data);
+
+  @Override
+  ReactiveWriteStream setWriteQueueMaxSize(int maxSize);
+
+  @Override
+  ReactiveWriteStream drainHandler(Handler<Void> handler);
 
   static ReactiveWriteStream writeStream() {
     return factory.writeStream();
