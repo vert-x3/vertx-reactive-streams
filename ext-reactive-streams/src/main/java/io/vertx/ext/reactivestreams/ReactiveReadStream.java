@@ -17,10 +17,9 @@
 package io.vertx.ext.reactivestreams;
 
 import io.vertx.core.Handler;
-import io.vertx.core.ServiceHelper;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.ReadStream;
-import io.vertx.ext.reactivestreams.spi.ReactiveReadStreamFactory;
+import io.vertx.ext.reactivestreams.impl.ReactiveReadStreamImpl;
 import org.reactivestreams.Subscriber;
 
 /**
@@ -31,10 +30,12 @@ public interface ReactiveReadStream extends ReadStream<Buffer>, Subscriber<Buffe
   static final int DEFAULT_BUFFER_REQUEST_BATCH_SIZE = 4;
 
   static ReactiveReadStream readStream() {
-    return factory.readStream();
+    return new ReactiveReadStreamImpl();
   }
 
-  static final ReactiveReadStreamFactory factory = ServiceHelper.loadFactory(ReactiveReadStreamFactory.class);
+  static ReactiveReadStream readStream(int bufferRequestBatchSize) {
+    return new ReactiveReadStreamImpl(bufferRequestBatchSize);
+  }
 
   @Override
   ReactiveReadStream exceptionHandler(Handler<Throwable> handler);

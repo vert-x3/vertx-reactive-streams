@@ -40,7 +40,7 @@ public class ReactiveWriteStreamImpl implements ReactiveWriteStream {
   private int totPending;
   private final Thread thread;
 
-  ReactiveWriteStreamImpl() {
+  public ReactiveWriteStreamImpl() {
     this.thread = Thread.currentThread();
   }
 

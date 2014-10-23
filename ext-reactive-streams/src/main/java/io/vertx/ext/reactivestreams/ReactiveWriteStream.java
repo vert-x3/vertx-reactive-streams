@@ -17,10 +17,9 @@
 package io.vertx.ext.reactivestreams;
 
 import io.vertx.core.Handler;
-import io.vertx.core.ServiceHelper;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
-import io.vertx.ext.reactivestreams.spi.ReactiveWriteStreamFactory;
+import io.vertx.ext.reactivestreams.impl.ReactiveWriteStreamImpl;
 import org.reactivestreams.Publisher;
 
 /**
@@ -28,6 +27,13 @@ import org.reactivestreams.Publisher;
  */
 
 public interface ReactiveWriteStream extends WriteStream<Buffer>, Publisher<Buffer> {
+
+  static final int DEFAULT_MAX_BUFFER_SIZE = 8 * 1024;
+  static final int DEFAULT_WRITE_QUEUE_MAX_SIZE = 32 * 1024;
+
+  static ReactiveWriteStream writeStream() {
+    return new ReactiveWriteStreamImpl();
+  }
 
   ReactiveWriteStream setBufferMaxSize(int maxBufferSize);
 
@@ -42,15 +48,5 @@ public interface ReactiveWriteStream extends WriteStream<Buffer>, Publisher<Buff
 
   @Override
   ReactiveWriteStream drainHandler(Handler<Void> handler);
-
-  static ReactiveWriteStream writeStream() {
-    return factory.writeStream();
-  }
-
-  static final int DEFAULT_MAX_BUFFER_SIZE = 8 * 1024;
-
-  static final int DEFAULT_WRITE_QUEUE_MAX_SIZE = 32 * 1024;
-
-  static final ReactiveWriteStreamFactory factory = ServiceHelper.loadFactory(ReactiveWriteStreamFactory.class);
 
 }
