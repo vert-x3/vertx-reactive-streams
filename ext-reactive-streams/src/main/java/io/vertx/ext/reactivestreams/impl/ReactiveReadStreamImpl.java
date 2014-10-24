@@ -42,12 +42,12 @@ public class ReactiveReadStreamImpl implements ReactiveReadStream {
   private int tokens;
   private final Thread thread;
 
-  ReactiveReadStreamImpl(int bufferRequestBatchSize) {
+  public ReactiveReadStreamImpl(int bufferRequestBatchSize) {
     this.bufferRequestBatchSize = bufferRequestBatchSize;
     thread = Thread.currentThread();
   }
 
-  ReactiveReadStreamImpl() {
+  public ReactiveReadStreamImpl() {
     this(DEFAULT_BUFFER_REQUEST_BATCH_SIZE);
   }
 
