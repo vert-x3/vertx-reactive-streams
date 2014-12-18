@@ -33,6 +33,7 @@
 
   <properties>
     <vertx.version>3.0.0-SNAPSHOT</vertx.version>
+    <reactive.streams.version>1.0.0.M3</reactive.streams.version>
   </properties>
 
   <dependencies>
@@ -44,7 +45,7 @@
     <dependency>
       <groupId>org.reactivestreams</groupId>
       <artifactId>reactive-streams</artifactId>
-      <version>0.4.0.M1</version>
+      <version>${reactive.streams.version}</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>

@@ -35,7 +35,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
 
   @Test
   public void testSubscribe() throws Exception {
-    ReactiveReadStream rws = ReactiveReadStream.readStream();
+    ReactiveReadStream<Buffer> rws = ReactiveReadStream.readStream();
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     assertNotNull(publisher.subscription);
@@ -44,7 +44,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
 
   @Test
   public void testDatahandler() throws Exception {
-    ReactiveReadStream rws = ReactiveReadStream.readStream();
+    ReactiveReadStream<Buffer> rws = ReactiveReadStream.readStream();
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     assertNotNull(publisher.subscription);
@@ -52,7 +52,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     List<Buffer> received = new ArrayList<>();
     rws.handler(received::add);
     assertEquals(1, publisher.subscription.requestedTimes);
-    assertEquals(ReactiveReadStream.DEFAULT_BUFFER_REQUEST_BATCH_SIZE, publisher.subscription.requested);
+    assertEquals(ReactiveReadStream.DEFAULT_BATCH_SIZE, publisher.subscription.requested);
     int numBuffers = 4;
     List<Buffer> buffers = createRandomBuffers(numBuffers);
     for (Buffer buffer: buffers) {
@@ -63,12 +63,12 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
       assertEquals(buffers.get(i), received.get(i));
     }
     assertEquals(2, publisher.subscription.requestedTimes);
-    assertEquals(ReactiveReadStream.DEFAULT_BUFFER_REQUEST_BATCH_SIZE * 2, publisher.subscription.requested);
+    assertEquals(ReactiveReadStream.DEFAULT_BATCH_SIZE * 2, publisher.subscription.requested);
   }
 
   @Test
   public void testSetPausedDataHandler() throws Exception {
-    ReactiveReadStream rws = ReactiveReadStream.readStream();
+    ReactiveReadStream<Buffer> rws = ReactiveReadStream.readStream();
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     assertNotNull(publisher.subscription);
@@ -84,7 +84,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     assertEquals(0, publisher.subscription.requested);
     rws.resume();
     assertEquals(1, publisher.subscription.requestedTimes);
-    assertEquals(ReactiveReadStream.DEFAULT_BUFFER_REQUEST_BATCH_SIZE, publisher.subscription.requested);
+    assertEquals(ReactiveReadStream.DEFAULT_BATCH_SIZE, publisher.subscription.requested);
     int numBuffers = 4;
     List<Buffer> buffers = createRandomBuffers(numBuffers);
     for (Buffer buffer: buffers) {
@@ -98,7 +98,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
 
   @Test
   public void testPauseInHandler() throws Exception {
-    ReactiveReadStream rws = ReactiveReadStream.readStream();
+    ReactiveReadStream<Buffer> rws = ReactiveReadStream.readStream();
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     assertNotNull(publisher.subscription);
@@ -109,7 +109,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
       rws.pause();
     });
     assertEquals(1, publisher.subscription.requestedTimes);
-    assertEquals(ReactiveReadStream.DEFAULT_BUFFER_REQUEST_BATCH_SIZE, publisher.subscription.requested);
+    assertEquals(ReactiveReadStream.DEFAULT_BATCH_SIZE, publisher.subscription.requested);
     int numBuffers = 4;
     List<Buffer> buffers = createRandomBuffers(numBuffers);
     for (Buffer buffer: buffers) {
@@ -119,12 +119,12 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     assertEquals(buffers.get(0), received.get(0));
 
     assertEquals(1, publisher.subscription.requestedTimes);
-    assertEquals(ReactiveReadStream.DEFAULT_BUFFER_REQUEST_BATCH_SIZE, publisher.subscription.requested);
+    assertEquals(ReactiveReadStream.DEFAULT_BATCH_SIZE, publisher.subscription.requested);
   }
 
   @Test
   public void testPauseResume() throws Exception {
-    ReactiveReadStream rws = ReactiveReadStream.readStream();
+    ReactiveReadStream<Buffer> rws = ReactiveReadStream.readStream();
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     assertNotNull(publisher.subscription);
@@ -132,7 +132,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     List<Buffer> received = new ArrayList<>();
     rws.handler(received::add);
     assertEquals(1, publisher.subscription.requestedTimes);
-    assertEquals(ReactiveReadStream.DEFAULT_BUFFER_REQUEST_BATCH_SIZE, publisher.subscription.requested);
+    assertEquals(ReactiveReadStream.DEFAULT_BATCH_SIZE, publisher.subscription.requested);
     int numBuffers = 4;
     List<Buffer> buffers = createRandomBuffers(numBuffers);
     for (Buffer buffer: buffers) {
@@ -144,10 +144,10 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     }
     rws.pause();
     assertEquals(2, publisher.subscription.requestedTimes);
-    assertEquals(ReactiveReadStream.DEFAULT_BUFFER_REQUEST_BATCH_SIZE * 2, publisher.subscription.requested);
+    assertEquals(ReactiveReadStream.DEFAULT_BATCH_SIZE * 2, publisher.subscription.requested);
     rws.resume();
     assertEquals(2, publisher.subscription.requestedTimes);
-    assertEquals(ReactiveReadStream.DEFAULT_BUFFER_REQUEST_BATCH_SIZE * 2, publisher.subscription.requested);
+    assertEquals(ReactiveReadStream.DEFAULT_BATCH_SIZE * 2, publisher.subscription.requested);
     buffers.clear();
     received.clear();
     buffers = createRandomBuffers(numBuffers);
@@ -162,7 +162,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
 
   @Test
   public void testPauseResumeInHandler() throws Exception {
-    ReactiveReadStream rws = ReactiveReadStream.readStream();
+    ReactiveReadStream<Buffer> rws = ReactiveReadStream.readStream();
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     assertNotNull(publisher.subscription);
@@ -174,7 +174,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
       received.add(buff);
     });
     assertEquals(1, publisher.subscription.requestedTimes);
-    assertEquals(ReactiveReadStream.DEFAULT_BUFFER_REQUEST_BATCH_SIZE, publisher.subscription.requested);
+    assertEquals(ReactiveReadStream.DEFAULT_BATCH_SIZE, publisher.subscription.requested);
     int numBuffers = 4;
     List<Buffer> buffers = createRandomBuffers(numBuffers);
     for (Buffer buffer: buffers) {
@@ -185,12 +185,12 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
       assertEquals(buffers.get(i), received.get(i));
     }
     assertEquals(2, publisher.subscription.requestedTimes);
-    assertEquals(ReactiveReadStream.DEFAULT_BUFFER_REQUEST_BATCH_SIZE * 2, publisher.subscription.requested);
+    assertEquals(ReactiveReadStream.DEFAULT_BATCH_SIZE * 2, publisher.subscription.requested);
   }
 
   @Test
   public void testOnError() throws Exception {
-    ReactiveReadStream rws = ReactiveReadStream.readStream();
+    ReactiveReadStream<Buffer> rws = ReactiveReadStream.readStream();
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     rws.exceptionHandler(t -> {
@@ -204,7 +204,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
 
   @Test
   public void testOnComplete() throws Exception {
-    ReactiveReadStream rws = ReactiveReadStream.readStream();
+    ReactiveReadStream<Buffer> rws = ReactiveReadStream.readStream();
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     rws.endHandler(v -> {
@@ -220,9 +220,9 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     int requestedTimes;
 
     @Override
-    public void request(int i) {
+    public void request(long n) {
       requestedTimes++;
-      requested += i;
+      requested += n;
     }
 
     @Override
@@ -235,10 +235,10 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
   class MyPublisher implements Publisher<Buffer> {
 
     MySubscription subscription;
-    Subscriber<Buffer> subscriber;
+    Subscriber<? super Buffer> subscriber;
 
     @Override
-    public void subscribe(Subscriber<Buffer> subscriber) {
+    public void subscribe(Subscriber<? super Buffer> subscriber) {
       this.subscriber = subscriber;
       subscription = new MySubscription();
       subscriber.onSubscribe(subscription);

@@ -35,7 +35,7 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
 
   @Test
   public void testWriteNoTokensInitially() throws Exception {
-    ReactiveWriteStream rws = ReactiveWriteStream.writeStream();
+    ReactiveWriteStream<Buffer> rws = ReactiveWriteStream.writeStream();
 
     MySubscriber subscriber = new MySubscriber();
     rws.subscribe(subscriber);
@@ -60,7 +60,7 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
 
   @Test
   public void testWriteInitialTokens() throws Exception {
-    ReactiveWriteStream rws = ReactiveWriteStream.writeStream();
+    ReactiveWriteStream<Buffer> rws = ReactiveWriteStream.writeStream();
 
     MySubscriber subscriber = new MySubscriber();
     rws.subscribe(subscriber);
@@ -79,40 +79,13 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
 
   }
 
-  @Test
-  public void testMaxBufferSize() throws Exception {
-    int size = 54651;
-    testDefaultMaxBufferSize(ReactiveWriteStream.writeStream().setBufferMaxSize(size), size);
-  }
-
-  @Test
-  public void testDefaultMaxBufferSize() throws Exception {
-    testDefaultMaxBufferSize(ReactiveWriteStream.writeStream(), ReactiveWriteStream.DEFAULT_MAX_BUFFER_SIZE);
-  }
-
   // TODO test setters for max writestreamsize and buffer size and valid values
 
   // TODO test cancel subscription
 
-  private void testDefaultMaxBufferSize(ReactiveWriteStream rws, int maxSize) throws Exception {
-
-    MySubscriber subscriber = new MySubscriber();
-    rws.subscribe(subscriber);
-
-    subscriber.subscription.request(2);
-
-    Buffer buff = TestUtils.randomBuffer(maxSize + 100);
-    rws.write(buff);
-
-    assertEquals(2, subscriber.buffers.size());
-    assertEquals(buff.slice(0, maxSize), subscriber.buffers.get(0));
-    assertEquals(buff.slice(maxSize, maxSize + 100), subscriber.buffers.get(1));
-
-  }
-
   @Test
   public void testMultipleSubscribers() throws Exception {
-    ReactiveWriteStream rws = ReactiveWriteStream.writeStream();
+    ReactiveWriteStream<Buffer> rws = ReactiveWriteStream.writeStream();
 
     MySubscriber subscriber1 = new MySubscriber();
     rws.subscribe(subscriber1);
@@ -198,23 +171,17 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
 
   @Test
   public void testWriteQueueFullAndDrainDefaultQueueSize() throws Exception {
-    ReactiveWriteStream rws = ReactiveWriteStream.writeStream();
-    testWriteQueueFullAndDrain(rws, ReactiveWriteStream.DEFAULT_WRITE_QUEUE_MAX_SIZE);
+    ReactiveWriteStream<Buffer> rws = ReactiveWriteStream.writeStream();
+    testWriteQueueFullAndDrain(rws, 10);
   }
 
-  @Test
-  public void testWriteQueueFullAndDrain() throws Exception {
-    ReactiveWriteStream rws = ReactiveWriteStream.writeStream();
-    int size = ReactiveWriteStream.DEFAULT_WRITE_QUEUE_MAX_SIZE * 2;
-    rws.setWriteQueueMaxSize(size);
-    testWriteQueueFullAndDrain(rws, size);
-  }
-
-  private void testWriteQueueFullAndDrain(ReactiveWriteStream rws, int writeQueueMaxSize) throws Exception {
+  private void testWriteQueueFullAndDrain(ReactiveWriteStream<Buffer> rws, int writeQueueMaxSize) throws Exception {
+    rws.setWriteQueueMaxSize(writeQueueMaxSize);
     MySubscriber subscriber = new MySubscriber();
     rws.subscribe(subscriber);
-    Buffer buff = TestUtils.randomBuffer(writeQueueMaxSize - 1);
-    rws.write(buff);
+    for (int i = 0; i < writeQueueMaxSize - 1; i++) {
+      rws.write(TestUtils.randomBuffer(50));
+    }
     assertFalse(rws.writeQueueFull());
     Buffer buff2 = TestUtils.randomBuffer(100);
     rws.write(buff2);
