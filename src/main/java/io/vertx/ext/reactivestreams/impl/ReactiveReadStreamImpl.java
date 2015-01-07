@@ -17,7 +17,6 @@
 package io.vertx.ext.reactivestreams.impl;
 
 import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.reactivestreams.ReactiveReadStream;
 import org.reactivestreams.Subscription;
 
@@ -28,30 +27,26 @@ import java.util.Queue;
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
-public class ReactiveReadStreamImpl implements ReactiveReadStream {
+public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
 
-  private final int bufferRequestBatchSize;
+  private final long batchSize;
 
-  private Handler<Buffer> dataHandler;
+  private Handler<T> dataHandler;
   private Handler<Void> endHandler;
   private Handler<Throwable> exceptionHandler;
 
   private Subscription subscription;
-  private final Queue<Buffer> pending = new ArrayDeque<>();
+  private final Queue<T> pending = new ArrayDeque<>();
   private boolean paused;
-  private int tokens;
+  private long tokens;
   private final Thread thread;
 
-  public ReactiveReadStreamImpl(int bufferRequestBatchSize) {
-    this.bufferRequestBatchSize = bufferRequestBatchSize;
+  public ReactiveReadStreamImpl(long batchSize) {
+    this.batchSize = batchSize;
     thread = Thread.currentThread();
   }
 
-  public ReactiveReadStreamImpl() {
-    this(DEFAULT_BUFFER_REQUEST_BATCH_SIZE);
-  }
-
-  public ReactiveReadStream handler(Handler<Buffer> handler) {
+  public ReactiveReadStream<T> handler(Handler<T> handler) {
     checkThread();
     this.dataHandler = handler;
     if (dataHandler != null && !paused) {
@@ -61,17 +56,17 @@ public class ReactiveReadStreamImpl implements ReactiveReadStream {
   }
 
   @Override
-  public ReactiveReadStream pause() {
+  public ReactiveReadStream<T> pause() {
     checkThread();
     this.paused = true;
     return this;
   }
 
   @Override
-  public ReactiveReadStream resume() {
+  public ReactiveReadStream<T> resume() {
     checkThread();
     this.paused = false;
-    Buffer data;
+    T data;
     while ((data = pending.poll()) != null) {
       handleData(data);
     }
@@ -80,14 +75,14 @@ public class ReactiveReadStreamImpl implements ReactiveReadStream {
   }
 
   @Override
-  public ReactiveReadStream endHandler(Handler<Void> endHandler) {
+  public ReactiveReadStream<T> endHandler(Handler<Void> endHandler) {
     checkThread();
     this.endHandler = endHandler;
     return this;
   }
 
   @Override
-  public ReactiveReadStream exceptionHandler(Handler<Throwable> handler) {
+  public ReactiveReadStream<T> exceptionHandler(Handler<Throwable> handler) {
     checkThread();
     this.exceptionHandler = handler;
     return this;
@@ -100,12 +95,12 @@ public class ReactiveReadStreamImpl implements ReactiveReadStream {
   }
 
   @Override
-  public void onNext(Buffer buffer) {
+  public void onNext(T data) {
     checkThread();
     if (tokens == 0) {
       throw new IllegalStateException("Data received but wasn't requested");
     }
-    handleData(buffer);
+    handleData(data);
   }
 
   @Override
@@ -124,11 +119,11 @@ public class ReactiveReadStreamImpl implements ReactiveReadStream {
     }
   }
 
-  private void handleData(Buffer buffer) {
+  private void handleData(T data) {
     if (paused) {
-      pending.add(buffer);
+      pending.add(data);
     } else if (dataHandler != null) {
-      dataHandler.handle(buffer);
+      dataHandler.handle(data);
       tokens--;
       checkRequestTokens();
     }
@@ -136,9 +131,8 @@ public class ReactiveReadStreamImpl implements ReactiveReadStream {
 
   private void checkRequestTokens() {
     if (!paused && subscription != null && tokens == 0) {
-      // We request in whole number of buffers, not in bytes
-      tokens = bufferRequestBatchSize;
-      subscription.request(bufferRequestBatchSize);
+      tokens = batchSize;
+      subscription.request(batchSize);
     }
   }
 

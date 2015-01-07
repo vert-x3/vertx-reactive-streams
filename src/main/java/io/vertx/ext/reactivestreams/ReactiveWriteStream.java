@@ -17,7 +17,6 @@
 package io.vertx.ext.reactivestreams;
 
 import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import io.vertx.ext.reactivestreams.impl.ReactiveWriteStreamImpl;
 import org.reactivestreams.Publisher;
@@ -26,27 +25,24 @@ import org.reactivestreams.Publisher;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
-public interface ReactiveWriteStream extends WriteStream<Buffer>, Publisher<Buffer> {
+public interface ReactiveWriteStream<T> extends WriteStream<T>, Publisher<T> {
 
-  static final int DEFAULT_MAX_BUFFER_SIZE = 8 * 1024;
-  static final int DEFAULT_WRITE_QUEUE_MAX_SIZE = 32 * 1024;
+  static final int DEFAULT_WRITE_QUEUE_MAX_SIZE = 32;
 
-  static ReactiveWriteStream writeStream() {
-    return new ReactiveWriteStreamImpl();
+  static <T> ReactiveWriteStream<T> writeStream() {
+    return new ReactiveWriteStreamImpl<>();
   }
 
-  ReactiveWriteStream setBufferMaxSize(int maxBufferSize);
+  @Override
+  ReactiveWriteStream<T> exceptionHandler(Handler<Throwable> handler);
 
   @Override
-  ReactiveWriteStream exceptionHandler(Handler<Throwable> handler);
+  ReactiveWriteStream<T> write(T data);
 
   @Override
-  ReactiveWriteStream write(Buffer data);
+  ReactiveWriteStream<T> setWriteQueueMaxSize(int maxSize);
 
   @Override
-  ReactiveWriteStream setWriteQueueMaxSize(int maxSize);
-
-  @Override
-  ReactiveWriteStream drainHandler(Handler<Void> handler);
+  ReactiveWriteStream<T> drainHandler(Handler<Void> handler);
 
 }

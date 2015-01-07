@@ -17,7 +17,6 @@
 package io.vertx.ext.reactivestreams;
 
 import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.reactivestreams.impl.ReactiveReadStreamImpl;
 import org.reactivestreams.Subscriber;
@@ -25,30 +24,30 @@ import org.reactivestreams.Subscriber;
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
-public interface ReactiveReadStream extends ReadStream<Buffer>, Subscriber<Buffer> {
+public interface ReactiveReadStream<T> extends ReadStream<T>, Subscriber<T> {
 
-  static final int DEFAULT_BUFFER_REQUEST_BATCH_SIZE = 4;
+  static final long DEFAULT_BATCH_SIZE = 4L;
 
-  static ReactiveReadStream readStream() {
-    return new ReactiveReadStreamImpl();
+  static <T> ReactiveReadStream<T> readStream() {
+    return readStream(DEFAULT_BATCH_SIZE);
   }
 
-  static ReactiveReadStream readStream(int bufferRequestBatchSize) {
-    return new ReactiveReadStreamImpl(bufferRequestBatchSize);
+  static <T> ReactiveReadStream<T> readStream(long batchSize) {
+    return new ReactiveReadStreamImpl<>(batchSize);
   }
 
   @Override
-  ReactiveReadStream exceptionHandler(Handler<Throwable> handler);
+  ReactiveReadStream<T> exceptionHandler(Handler<Throwable> handler);
 
   @Override
-  ReactiveReadStream handler(Handler<Buffer> handler);
+  ReactiveReadStream<T> handler(Handler<T> handler);
 
   @Override
-  ReactiveReadStream pause();
+  ReactiveReadStream<T> pause();
 
   @Override
-  ReactiveReadStream resume();
+  ReactiveReadStream<T> resume();
 
   @Override
-  ReactiveReadStream endHandler(Handler<Void> endHandler);
+  ReactiveReadStream<T> endHandler(Handler<Void> endHandler);
 }

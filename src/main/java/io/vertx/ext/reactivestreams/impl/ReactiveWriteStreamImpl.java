@@ -17,7 +17,6 @@
 package io.vertx.ext.reactivestreams.impl;
 
 import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -30,14 +29,12 @@ import java.util.Set;
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
-public class ReactiveWriteStreamImpl implements ReactiveWriteStream {
+public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
 
-  private Set<SubscriptionImpl> subscriptions = new HashSet<SubscriptionImpl>();
-  private final Queue<Buffer> pending = new ArrayDeque<>();
+  private Set<SubscriptionImpl> subscriptions = new HashSet<>();
+  private final Queue<T> pending = new ArrayDeque<>();
   private Handler<Void> drainHandler;
   private int writeQueueMaxSize = DEFAULT_WRITE_QUEUE_MAX_SIZE;
-  private int maxBufferSize = DEFAULT_MAX_BUFFER_SIZE;
-  private int totPending;
   private final Thread thread;
 
   public ReactiveWriteStreamImpl() {
@@ -45,7 +42,7 @@ public class ReactiveWriteStreamImpl implements ReactiveWriteStream {
   }
 
   @Override
-  public void subscribe(Subscriber<Buffer> subscriber) {
+  public void subscribe(Subscriber<? super T> subscriber) {
     checkThread();
     SubscriptionImpl sub = new SubscriptionImpl(subscriber);
     subscriptions.add(sub);
@@ -53,20 +50,15 @@ public class ReactiveWriteStreamImpl implements ReactiveWriteStream {
   }
 
   @Override
-  public ReactiveWriteStreamImpl write(Buffer data) {
+  public ReactiveWriteStream<T> write(T data) {
     checkThread();
-    if (data.length() > maxBufferSize) {
-      splitBuffers(data);
-    } else {
-      pending.add(data);
-    }
-    totPending += data.length();
+    pending.add(data);
     checkSend();
     return this;
   }
 
   @Override
-  public ReactiveWriteStreamImpl setWriteQueueMaxSize(int maxSize) {
+  public ReactiveWriteStream<T> setWriteQueueMaxSize(int maxSize) {
     checkThread();
     if (writeQueueMaxSize < 1) {
       throw new IllegalArgumentException("writeQueueMaxSize must be >=1");
@@ -78,45 +70,25 @@ public class ReactiveWriteStreamImpl implements ReactiveWriteStream {
   @Override
   public boolean writeQueueFull() {
     checkThread();
-    return totPending >= writeQueueMaxSize;
+    return pending.size() >= writeQueueMaxSize;
   }
 
   @Override
-  public ReactiveWriteStreamImpl drainHandler(Handler<Void> handler) {
+  public ReactiveWriteStream<T> drainHandler(Handler<Void> handler) {
     checkThread();
     this.drainHandler = handler;
     return this;
   }
 
   @Override
-  public ReactiveWriteStreamImpl exceptionHandler(Handler<Throwable> handler) {
+  public ReactiveWriteStream<T> exceptionHandler(Handler<Throwable> handler) {
     checkThread();
-    return this;
-  }
-
-  @Override
-  public ReactiveWriteStream setBufferMaxSize(int maxBufferSize) {
-    checkThread();
-    if (maxBufferSize < 1) {
-      throw new IllegalArgumentException("maxBufferSize must be >=1");
-    }
-    this.maxBufferSize = maxBufferSize;
     return this;
   }
 
   private void checkThread() {
     if (Thread.currentThread() != thread) {
       throw new IllegalStateException("Wrong thread!");
-    }
-  }
-
-  private void splitBuffers(Buffer data) {
-    int pos = 0;
-    while (pos < data.length() - 1) {
-      int end = pos + Math.min(maxBufferSize, data.length() - pos);
-      Buffer slice = data.slice(pos, end);
-      pending.add(slice);
-      pos += maxBufferSize;
     }
   }
 
@@ -128,7 +100,7 @@ public class ReactiveWriteStreamImpl implements ReactiveWriteStream {
       for (int i = 0; i < toSend; i++) {
         sendToSubscribers(pending.poll());
       }
-      if (drainHandler != null && totPending < writeQueueMaxSize) {
+      if (drainHandler != null && pending.size() < writeQueueMaxSize) {
         drainHandler.handle(null);
       }
     }
@@ -148,30 +120,25 @@ public class ReactiveWriteStreamImpl implements ReactiveWriteStream {
     }
   }
 
-  private void sendToSubscribers(Buffer data) {
-    boolean copy = subscriptions.size() > 1;
+  private void sendToSubscribers(T data) {
     for (SubscriptionImpl sub: subscriptions) {
-      if (copy) {
-        data = data.copy();
-      }
-      totPending -= data.length();
       sub.subscriber.onNext(data);
     }
   }
 
   class SubscriptionImpl implements Subscription {
 
-    Subscriber<Buffer> subscriber;
+    Subscriber<? super T> subscriber;
     int tokens;
 
-    SubscriptionImpl(Subscriber<Buffer> subscriber) {
+    SubscriptionImpl(Subscriber<? super T> subscriber) {
       this.subscriber = subscriber;
     }
 
     @Override
-    public void request(int i) {
+    public void request(long n) {
       checkThread();
-      tokens += i;
+      tokens += n;
       checkSend();
     }
 
