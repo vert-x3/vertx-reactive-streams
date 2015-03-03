@@ -96,7 +96,6 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
     } else {
       this.subscription = subscription;
       if (RUNNING_TCK) {
-        System.out.println("checking tokens");
         checkRequestTokens();
       }
     }
