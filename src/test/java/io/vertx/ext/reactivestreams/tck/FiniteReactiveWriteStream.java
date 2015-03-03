@@ -16,6 +16,8 @@
 
 package io.vertx.ext.reactivestreams.tck;
 
+import io.vertx.core.Context;
+import io.vertx.core.Vertx;
 import io.vertx.ext.reactivestreams.impl.ReactiveWriteStreamImpl;
 import org.reactivestreams.Subscriber;
 
@@ -31,7 +33,8 @@ public class FiniteReactiveWriteStream<T> extends ReactiveWriteStreamImpl<T> {
   private Map<Subscriber<? super T>, AtomicLong> subs = new WeakHashMap<>();
   private final long elements;
 
-  public FiniteReactiveWriteStream(long elements) {
+  public FiniteReactiveWriteStream(Vertx vertx, long elements) {
+    super(vertx);
     this.elements = elements;
   }
 
@@ -42,15 +45,14 @@ public class FiniteReactiveWriteStream<T> extends ReactiveWriteStreamImpl<T> {
   }
 
   @Override
-  protected void onNext(Subscriber<? super T> subscriber, T data) {
+  protected void onNext(Context context, Subscriber<? super T> subscriber, T data) {
     AtomicLong count = subs.get(subscriber);
     if (count == null) return; // Means we already completed it
 
     long remaining = count.decrementAndGet();
-    super.onNext(subscriber, data);
+    super.onNext(context, subscriber, data);
     if (remaining == 0) {
-      subscriber.onComplete();
-      subs.remove(subscriber);
+      close();
     }
   }
 }

@@ -16,16 +16,14 @@
 
 package io.vertx.ext.reactivestreams.impl;
 
+import io.vertx.core.Context;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import java.util.ArrayDeque;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -37,35 +35,49 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   private final Queue<T> pending = new ArrayDeque<>();
   private Handler<Void> drainHandler;
   private int writeQueueMaxSize = DEFAULT_WRITE_QUEUE_MAX_SIZE;
-  private final Thread thread;
+  private final Context ctx;
+  private boolean closed;
 
-  public ReactiveWriteStreamImpl() {
-    this.thread = Thread.currentThread();
+  public ReactiveWriteStreamImpl(Vertx vertx) {
+    ctx = vertx.getOrCreateContext();
+  }
+
+  private void checkClosed() {
+    if (closed) {
+      throw new IllegalStateException("Closed");
+    }
   }
 
   @Override
-  public void subscribe(Subscriber<? super T> subscriber) {
-    checkThread();
+  public synchronized void subscribe(Subscriber<? super T> subscriber) {
+    checkClosed();
     Objects.requireNonNull(subscriber);
+
     SubscriptionImpl sub = new SubscriptionImpl(subscriber);
     if (subscriptions.add(sub)) {
-      subscriber.onSubscribe(sub);
+      ctx.runOnContext(v -> {
+        try {
+          subscriber.onSubscribe(sub);
+        } catch (Throwable t) {
+          subscriber.onError(t);
+        }
+      });
     } else {
       throw new IllegalStateException("1.10 Cannot subscribe multiple times with the same subscriber.");
     }
   }
 
   @Override
-  public ReactiveWriteStream<T> write(T data) {
-    checkThread();
+  public synchronized ReactiveWriteStream<T> write(T data) {
+    checkClosed();
     pending.add(data);
     checkSend();
     return this;
   }
 
   @Override
-  public ReactiveWriteStream<T> setWriteQueueMaxSize(int maxSize) {
-    checkThread();
+  public synchronized ReactiveWriteStream<T> setWriteQueueMaxSize(int maxSize) {
+    checkClosed();
     if (writeQueueMaxSize < 1) {
       throw new IllegalArgumentException("writeQueueMaxSize must be >=1");
     }
@@ -74,28 +86,32 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   }
 
   @Override
-  public boolean writeQueueFull() {
-    checkThread();
+  public synchronized boolean writeQueueFull() {
+    checkClosed();
     return pending.size() >= writeQueueMaxSize;
   }
 
   @Override
-  public ReactiveWriteStream<T> drainHandler(Handler<Void> handler) {
-    checkThread();
+  public synchronized ReactiveWriteStream<T> drainHandler(Handler<Void> handler) {
+    checkClosed();
     this.drainHandler = handler;
     return this;
   }
 
   @Override
-  public ReactiveWriteStream<T> exceptionHandler(Handler<Throwable> handler) {
-    checkThread();
+  public synchronized ReactiveWriteStream<T> exceptionHandler(Handler<Throwable> handler) {
     return this;
   }
 
-  private void checkThread() {
-    if (Thread.currentThread() != thread) {
-      throw new IllegalStateException("Wrong thread!");
+  @Override
+  public synchronized ReactiveWriteStream<T> close() {
+    if (!closed) {
+      complete();
+      subscriptions.clear();
+      pending.clear();
+      closed = true;
     }
+    return this;
   }
 
   private void checkSend() {
@@ -107,9 +123,14 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
         sendToSubscribers(pending.poll());
       }
       if (drainHandler != null && pending.size() < writeQueueMaxSize) {
-        drainHandler.handle(null);
+        callDrainHandler();
       }
     }
+  }
+
+  private void callDrainHandler() {
+    Handler<Void> dh = drainHandler;
+    ctx.runOnContext(v -> dh.handle(null));
   }
 
   private long getAvailable() {
@@ -126,14 +147,26 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
     }
   }
 
-  private void sendToSubscribers(T data) {
+  private void complete() {
     for (SubscriptionImpl sub: subscriptions) {
-      onNext(sub.subscriber, data);
+      ctx.runOnContext(v -> sub.subscriber.onComplete());
     }
   }
 
-  protected void onNext(Subscriber<? super T> subscriber, T data) {
-    subscriber.onNext(data);
+  private void sendToSubscribers(T data) {
+    for (SubscriptionImpl sub: subscriptions) {
+      onNext(ctx, sub.subscriber, data);
+    }
+  }
+
+  protected void onNext(Context context, Subscriber<? super T> subscriber, T data) {
+    context.runOnContext(v -> {
+      try {
+        subscriber.onNext(data);
+      } catch (Throwable t) {
+        subscriber.onError(t);
+      }
+    });
   }
 
   private class SubscriptionImpl implements Subscription {
@@ -156,7 +189,6 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
 
     @Override
     public void request(long n) {
-      checkThread();
       if (n > 0) {
         // More then Long.MAX_VALUE pending
         if (tokens.addAndGet(n) > 0) {

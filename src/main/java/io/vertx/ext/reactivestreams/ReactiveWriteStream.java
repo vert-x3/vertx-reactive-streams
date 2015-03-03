@@ -17,20 +17,32 @@
 package io.vertx.ext.reactivestreams;
 
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.streams.WriteStream;
 import io.vertx.ext.reactivestreams.impl.ReactiveWriteStreamImpl;
 import org.reactivestreams.Publisher;
 
 /**
+ * A Vert.x write stream that also implements reactive streams publisher interface.
+ *
+ *
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
-
 public interface ReactiveWriteStream<T> extends WriteStream<T>, Publisher<T> {
 
+  /**
+   * Default write queue max size
+   */
   static final int DEFAULT_WRITE_QUEUE_MAX_SIZE = 32;
 
-  static <T> ReactiveWriteStream<T> writeStream() {
-    return new ReactiveWriteStreamImpl<>();
+  /**
+   * Create a reactive write stream
+   *
+   * @param vertx  the Vert.x instance
+   * @return the stream
+   */
+  static <T> ReactiveWriteStream<T> writeStream(Vertx vertx) {
+    return new ReactiveWriteStreamImpl<>(vertx);
   }
 
   @Override
@@ -44,5 +56,12 @@ public interface ReactiveWriteStream<T> extends WriteStream<T>, Publisher<T> {
 
   @Override
   ReactiveWriteStream<T> drainHandler(Handler<Void> handler);
+
+  /**
+   * Close the stream
+   *
+   * @return a reference to this for a fluent API
+   */
+  ReactiveWriteStream<T> close();
 
 }

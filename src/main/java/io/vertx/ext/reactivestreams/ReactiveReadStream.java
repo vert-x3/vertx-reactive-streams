@@ -22,16 +22,32 @@ import io.vertx.ext.reactivestreams.impl.ReactiveReadStreamImpl;
 import org.reactivestreams.Subscriber;
 
 /**
+ * A Vert.x read stream that also implements reactive streams subscriber interface.
+ *
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 public interface ReactiveReadStream<T> extends ReadStream<T>, Subscriber<T> {
 
+  /**
+   * Default batch size
+   */
   static final long DEFAULT_BATCH_SIZE = 4L;
 
+  /**
+   * Create a reactive read stream
+   *
+   * @return the stream
+   */
   static <T> ReactiveReadStream<T> readStream() {
     return readStream(DEFAULT_BATCH_SIZE);
   }
 
+  /**
+   * Create a reactive read stream specifying batch size
+   *
+   * @param batchSize  the batch size
+   * @return the stream
+   */
   static <T> ReactiveReadStream<T> readStream(long batchSize) {
     return new ReactiveReadStreamImpl<>(batchSize);
   }

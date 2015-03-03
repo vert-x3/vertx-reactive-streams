@@ -32,8 +32,9 @@
   <name>Vert.x - Reactive Streams</name>
 
   <properties>
+    <vertx.version>3.0.0-SNAPSHOT</vertx.version>
+    <reactive.streams.version>1.0.0.RC3</reactive.streams.version>
     <stack.version>3.0.0-SNAPSHOT</stack.version>
-    <reactive.streams.version>1.0.0.M3</reactive.streams.version>
   </properties>
 
   <dependencyManagement>
@@ -124,6 +125,7 @@
               <!-- JUnit tests will not run along side TestNG ones -->
               <excludes>
                 <exclude>**/test/*</exclude>
+                <exclude>**/tck/SubscriberWhitebox*</exclude>
               </excludes>
             </configuration>
           </plugin>
