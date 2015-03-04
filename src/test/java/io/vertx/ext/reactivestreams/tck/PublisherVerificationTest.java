@@ -1,10 +1,13 @@
 package io.vertx.ext.reactivestreams.tck;
 
+import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
+import io.vertx.ext.reactivestreams.impl.ReactiveWriteStreamImpl;
 import io.vertx.test.core.TestUtils;
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 import org.reactivestreams.tck.PublisherVerification;
 import org.reactivestreams.tck.TestEnvironment;
 
@@ -39,16 +42,16 @@ public class PublisherVerificationTest extends PublisherVerification<Buffer> {
   @Override
   public Publisher<Buffer> createErrorStatePublisher() {
 
-//    return new ReactiveWriteStreamImpl<Buffer>(vertx) {
-//      @Override
-//      public void subscribe(Subscriber subscriber) {
-//        //subscriber.onSubscribe();
-//        subscriber.onError(new RuntimeException("Can't subscribe subscriber: " + subscriber + ", because of reasons."));
-//        //throw new RuntimeException();
-//      }
-//    };
-
-    // FIXME - for now return null so tests pass
-    return null;
+    return new ReactiveWriteStreamImpl<Buffer>(vertx) {
+      @Override
+      public void subscribe(Subscriber<? super Buffer> subscriber) {
+        Context ctx = vertx.getOrCreateContext();
+        super.subscribe(subscriber);
+        ctx.runOnContext(v -> {
+          // Now signal an error
+          subscriber.onError(new RuntimeException("Can't subscribe subscriber: " + subscriber + ", because of reasons."));
+        });
+      }
+    };
   }
 }
