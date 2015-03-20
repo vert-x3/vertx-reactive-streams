@@ -7,4 +7,4 @@ Please see the in source asciidoc documentation or the main documentation on the
 of Apex:
 
 * Web-site docs
-* link:src/main/asciidoc/java/index.adoc[in-source docs]
+* link:src/main/java/io/vertx/ext/reactivestreams/package-info.java[in-source docs]
