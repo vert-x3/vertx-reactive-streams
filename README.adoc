@@ -1,0 +1,10 @@
+= Reactive Streams for Vert.x
+
+"link:http://www.reactive-streams.org/[Reactive Streams] is an initiative to provide a standard for asynchronous stream
+processing with non-blocking back pressure on the JVM."
+
+Please see the in source asciidoc documentation or the main documentation on the web-site for a full description
+of Apex:
+
+* Web-site docs
+* link:src/main/asciidoc/java/index.adoc[in-source docs]
