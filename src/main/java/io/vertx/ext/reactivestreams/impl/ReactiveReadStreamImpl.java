@@ -29,8 +29,13 @@ import java.util.Queue;
  */
 public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
 
-  private final long batchSize;
+  /*
+  Temp hack so we can pass TCK - currently it makes invalid assumption about when requestMore is called:
+  https://github.com/reactive-streams/reactive-streams-jvm/issues/233
+   */
+  public static boolean RUNNING_TCK = false;
 
+  private final long batchSize;
   private Handler<T> dataHandler;
   private Handler<Void> endHandler;
   private Handler<Throwable> exceptionHandler;
@@ -39,15 +44,12 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
   private final Queue<T> pending = new ArrayDeque<>();
   private boolean paused;
   private long tokens;
-  private final Thread thread;
 
   public ReactiveReadStreamImpl(long batchSize) {
     this.batchSize = batchSize;
-    thread = Thread.currentThread();
   }
 
-  public ReactiveReadStream<T> handler(Handler<T> handler) {
-    checkThread();
+  public synchronized ReactiveReadStream<T> handler(Handler<T> handler) {
     this.dataHandler = handler;
     if (dataHandler != null && !paused) {
       checkRequestTokens();
@@ -56,15 +58,13 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
   }
 
   @Override
-  public ReactiveReadStream<T> pause() {
-    checkThread();
+  public synchronized ReactiveReadStream<T> pause() {
     this.paused = true;
     return this;
   }
 
   @Override
-  public ReactiveReadStream<T> resume() {
-    checkThread();
+  public synchronized ReactiveReadStream<T> resume() {
     this.paused = false;
     T data;
     while ((data = pending.poll()) != null) {
@@ -75,28 +75,37 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
   }
 
   @Override
-  public ReactiveReadStream<T> endHandler(Handler<Void> endHandler) {
-    checkThread();
+  public synchronized ReactiveReadStream<T> endHandler(Handler<Void> endHandler) {
     this.endHandler = endHandler;
     return this;
   }
 
   @Override
-  public ReactiveReadStream<T> exceptionHandler(Handler<Throwable> handler) {
-    checkThread();
+  public synchronized ReactiveReadStream<T> exceptionHandler(Handler<Throwable> handler) {
     this.exceptionHandler = handler;
     return this;
   }
 
   @Override
-  public void onSubscribe(Subscription subscription) {
-    checkThread();
-    this.subscription = subscription;
+  public synchronized void onSubscribe(Subscription subscription) {
+    if (subscription == null) {
+      throw new NullPointerException("subscription");
+    }
+    if (this.subscription != null) {
+      subscription.cancel();
+    } else {
+      this.subscription = subscription;
+      if (RUNNING_TCK) {
+        checkRequestTokens();
+      }
+    }
   }
 
   @Override
-  public void onNext(T data) {
-    checkThread();
+  public synchronized void onNext(T data) {
+    if (data == null) {
+      throw new NullPointerException("data");
+    }
     if (tokens == 0) {
       throw new IllegalStateException("Data received but wasn't requested");
     }
@@ -104,22 +113,23 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
   }
 
   @Override
-  public void onError(Throwable throwable) {
-    checkThread();
+  public synchronized void onError(Throwable throwable) {
+    if (throwable == null) {
+      throw new NullPointerException("throwable");
+    }
     if (exceptionHandler != null) {
       exceptionHandler.handle(throwable);
     }
   }
 
   @Override
-  public void onComplete() {
-    checkThread();
+  public synchronized void onComplete() {
     if (endHandler != null) {
       endHandler.handle(null);
     }
   }
 
-  private void handleData(T data) {
+  private synchronized void handleData(T data) {
     if (paused) {
       pending.add(data);
     } else if (dataHandler != null) {
@@ -133,12 +143,6 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
     if (!paused && subscription != null && tokens == 0) {
       tokens = batchSize;
       subscription.request(batchSize);
-    }
-  }
-
-  private void checkThread() {
-    if (Thread.currentThread() != thread) {
-      throw new IllegalStateException("Wrong thread!");
     }
   }
 

@@ -16,15 +16,15 @@
 
 package io.vertx.ext.reactivestreams.impl;
 
+import io.vertx.core.Context;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import java.util.ArrayDeque;
-import java.util.HashSet;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -35,31 +35,49 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   private final Queue<T> pending = new ArrayDeque<>();
   private Handler<Void> drainHandler;
   private int writeQueueMaxSize = DEFAULT_WRITE_QUEUE_MAX_SIZE;
-  private final Thread thread;
+  private final Context ctx;
+  private boolean closed;
 
-  public ReactiveWriteStreamImpl() {
-    this.thread = Thread.currentThread();
+  public ReactiveWriteStreamImpl(Vertx vertx) {
+    ctx = vertx.getOrCreateContext();
+  }
+
+  private void checkClosed() {
+    if (closed) {
+      throw new IllegalStateException("Closed");
+    }
   }
 
   @Override
-  public void subscribe(Subscriber<? super T> subscriber) {
-    checkThread();
+  public synchronized void subscribe(Subscriber<? super T> subscriber) {
+    checkClosed();
+    Objects.requireNonNull(subscriber);
+
     SubscriptionImpl sub = new SubscriptionImpl(subscriber);
-    subscriptions.add(sub);
-    subscriber.onSubscribe(sub);
+    if (subscriptions.add(sub)) {
+      ctx.runOnContext(v -> {
+        try {
+          subscriber.onSubscribe(sub);
+        } catch (Throwable t) {
+          subscriber.onError(t);
+        }
+      });
+    } else {
+      throw new IllegalStateException("1.10 Cannot subscribe multiple times with the same subscriber.");
+    }
   }
 
   @Override
-  public ReactiveWriteStream<T> write(T data) {
-    checkThread();
+  public synchronized ReactiveWriteStream<T> write(T data) {
+    checkClosed();
     pending.add(data);
     checkSend();
     return this;
   }
 
   @Override
-  public ReactiveWriteStream<T> setWriteQueueMaxSize(int maxSize) {
-    checkThread();
+  public synchronized ReactiveWriteStream<T> setWriteQueueMaxSize(int maxSize) {
+    checkClosed();
     if (writeQueueMaxSize < 1) {
       throw new IllegalArgumentException("writeQueueMaxSize must be >=1");
     }
@@ -68,83 +86,140 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   }
 
   @Override
-  public boolean writeQueueFull() {
-    checkThread();
+  public synchronized boolean writeQueueFull() {
+    checkClosed();
     return pending.size() >= writeQueueMaxSize;
   }
 
   @Override
-  public ReactiveWriteStream<T> drainHandler(Handler<Void> handler) {
-    checkThread();
+  public synchronized ReactiveWriteStream<T> drainHandler(Handler<Void> handler) {
+    checkClosed();
     this.drainHandler = handler;
     return this;
   }
 
   @Override
-  public ReactiveWriteStream<T> exceptionHandler(Handler<Throwable> handler) {
-    checkThread();
+  public synchronized ReactiveWriteStream<T> exceptionHandler(Handler<Throwable> handler) {
     return this;
   }
 
-  private void checkThread() {
-    if (Thread.currentThread() != thread) {
-      throw new IllegalStateException("Wrong thread!");
+  @Override
+  public synchronized ReactiveWriteStream<T> close() {
+    if (!closed) {
+      complete();
+      subscriptions.clear();
+      pending.clear();
+      closed = true;
     }
+    return this;
   }
 
   private void checkSend() {
     if (!subscriptions.isEmpty()) {
-      int availableTokens = getAvailable();
-      int toSend = Math.min(availableTokens, pending.size());
+      long availableTokens = getAvailable();
+      long toSend = Math.min(availableTokens, pending.size());
       takeTokens(toSend);
-      for (int i = 0; i < toSend; i++) {
+      for (long i = 0; i < toSend; i++) {
         sendToSubscribers(pending.poll());
       }
       if (drainHandler != null && pending.size() < writeQueueMaxSize) {
-        drainHandler.handle(null);
+        callDrainHandler();
       }
     }
   }
 
-  private int getAvailable() {
-    int min = Integer.MAX_VALUE;
+  private void callDrainHandler() {
+    Handler<Void> dh = drainHandler;
+    ctx.runOnContext(v -> dh.handle(null));
+  }
+
+  private long getAvailable() {
+    long min = Long.MAX_VALUE;
     for (SubscriptionImpl subscription: subscriptions) {
-      min = Math.min(subscription.tokens, min);
+      min = Math.min(subscription.tokens(), min);
     }
     return min;
   }
 
-  private void takeTokens(int toSend) {
+  private void takeTokens(long toSend) {
     for (SubscriptionImpl subscription: subscriptions) {
-      subscription.tokens -= toSend;
+      subscription.takeTokens(toSend);
+    }
+  }
+
+  private void complete() {
+    for (SubscriptionImpl sub: subscriptions) {
+      ctx.runOnContext(v -> sub.subscriber.onComplete());
     }
   }
 
   private void sendToSubscribers(T data) {
     for (SubscriptionImpl sub: subscriptions) {
-      sub.subscriber.onNext(data);
+      onNext(ctx, sub.subscriber, data);
     }
   }
 
-  class SubscriptionImpl implements Subscription {
+  protected void onNext(Context context, Subscriber<? super T> subscriber, T data) {
+    context.runOnContext(v -> {
+      try {
+        subscriber.onNext(data);
+      } catch (Throwable t) {
+        subscriber.onError(t);
+      }
+    });
+  }
 
-    Subscriber<? super T> subscriber;
-    int tokens;
+  private class SubscriptionImpl implements Subscription {
 
-    SubscriptionImpl(Subscriber<? super T> subscriber) {
+    private final Subscriber<? super T> subscriber;
+    // We start at Long.MIN_VALUE so we know when we've requested more then Long.MAX_VALUE. See 3.17 of spec
+    private final AtomicLong tokens = new AtomicLong(Long.MIN_VALUE);
+
+    private SubscriptionImpl(Subscriber<? super T> subscriber) {
       this.subscriber = subscriber;
+    }
+
+    public long tokens() {
+      return -(Long.MIN_VALUE - tokens.get());
+    }
+
+    public void takeTokens(long amount) {
+      tokens.addAndGet(-amount);
     }
 
     @Override
     public void request(long n) {
-      checkThread();
-      tokens += n;
-      checkSend();
+      if (n > 0) {
+        // More then Long.MAX_VALUE pending
+        if (tokens.addAndGet(n) > 0) {
+          subscriber.onError(new IllegalStateException("3.17 Subscriber has more then Long.MAX_VALUE (2^63-1) currently pending."));
+        } else {
+          checkSend();
+        }
+      } else {
+        subscriber.onError(new IllegalArgumentException("3.9 Subscriber cannot request less then 1 for the number of elements."));
+      }
     }
 
     @Override
     public void cancel() {
       subscriptions.remove(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      @SuppressWarnings("unchecked")
+      SubscriptionImpl that = (SubscriptionImpl) o;
+
+      return subscriber == that.subscriber;
+    }
+
+    @Override
+    public int hashCode() {
+      return subscriber.hashCode();
     }
   }
 }
