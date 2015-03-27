@@ -51,8 +51,6 @@
  *
  */
 @Document(fileName = "index.adoc")
-@GenModule(name = "vertx-reactive-streams")
 package io.vertx.ext.reactivestreams;
 
-import io.vertx.codegen.annotations.GenModule;
 import io.vertx.docgen.Document;
