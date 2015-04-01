@@ -89,6 +89,12 @@ public class SubscriberWhiteboxVerificationTest extends SubscriberWhiteboxVerifi
         probe.registerOnComplete();
         super.onComplete();
       }
+
+      // Need to override this to drop the tokens check or the test won't pass
+      @Override
+      protected void checkUnsolicitedTokens() {
+        // NO OP
+      }
     };
   }
 

@@ -40,7 +40,7 @@ public class PublisherVerificationTest extends PublisherVerification<Buffer> {
   }
 
   @Override
-  public Publisher<Buffer> createErrorStatePublisher() {
+  public Publisher<Buffer> createFailedPublisher() {
 
     return new ReactiveWriteStreamImpl<Buffer>(vertx) {
       @Override

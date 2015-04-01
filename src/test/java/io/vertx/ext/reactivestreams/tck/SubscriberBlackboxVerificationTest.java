@@ -18,7 +18,6 @@ package io.vertx.ext.reactivestreams.tck;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.reactivestreams.ReactiveReadStream;
-import io.vertx.ext.reactivestreams.impl.ReactiveReadStreamImpl;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.tck.SubscriberBlackboxVerification;
 import org.reactivestreams.tck.TestEnvironment;
@@ -31,7 +30,6 @@ public class SubscriberBlackboxVerificationTest extends SubscriberBlackboxVerifi
 
   public SubscriberBlackboxVerificationTest() {
     super(new TestEnvironment());
-    ReactiveReadStreamImpl.RUNNING_TCK = true;
   }
 
   @Override
@@ -42,6 +40,13 @@ public class SubscriberBlackboxVerificationTest extends SubscriberBlackboxVerifi
   @Override
   public Subscriber<Buffer> createSubscriber() {
     return ReactiveReadStream.readStream();
+  }
+
+  @Override
+  public void triggerRequest(Subscriber<? super Buffer> subscriber) {
+    System.out.println("Calling triggerRequest on: " + subscriber);
+    ReactiveReadStream<Buffer> rrs = (ReactiveReadStream<Buffer>)subscriber;
+    rrs.handler(b -> {});
   }
 
 

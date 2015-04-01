@@ -29,12 +29,6 @@ import java.util.Queue;
  */
 public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
 
-  /*
-  Temp hack so we can pass TCK - currently it makes invalid assumption about when requestMore is called:
-  https://github.com/reactive-streams/reactive-streams-jvm/issues/233
-   */
-  public static boolean RUNNING_TCK = false;
-
   private final long batchSize;
   private Handler<T> dataHandler;
   private Handler<Void> endHandler;
@@ -95,9 +89,6 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
       subscription.cancel();
     } else {
       this.subscription = subscription;
-      if (RUNNING_TCK) {
-        checkRequestTokens();
-      }
     }
   }
 
@@ -106,9 +97,7 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
     if (data == null) {
       throw new NullPointerException("data");
     }
-    if (tokens == 0) {
-      throw new IllegalStateException("Data received but wasn't requested");
-    }
+    checkUnsolicitedTokens();
     handleData(data);
   }
 
@@ -126,6 +115,12 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
   public synchronized void onComplete() {
     if (endHandler != null) {
       endHandler.handle(null);
+    }
+  }
+
+  protected void checkUnsolicitedTokens() {
+    if (tokens == 0) {
+      throw new IllegalStateException("Data received but wasn't requested");
     }
   }
 
