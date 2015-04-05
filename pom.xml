@@ -27,14 +27,14 @@
   </parent>
 
   <artifactId>vertx-reactive-streams</artifactId>
-  <version>3.0.0-milestone4</version>
+  <version>3.0.0-SNAPSHOT</version>
 
   <name>Vert.x - Reactive Streams</name>
 
   <properties>
     <vertx.version>3.0.0-SNAPSHOT</vertx.version>
     <reactive.streams.version>1.0.0.RC4</reactive.streams.version>
-    <stack.version>3.0.0-milestone4</stack.version>
+    <stack.version>3.0.0-SNAPSHOT</stack.version>
     <asciidoc.dir>${project.basedir}/src/main/asciidoc</asciidoc.dir>
   </properties>
 
