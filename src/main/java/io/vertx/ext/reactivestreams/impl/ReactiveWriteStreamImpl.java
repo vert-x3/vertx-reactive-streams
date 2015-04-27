@@ -59,7 +59,7 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
         try {
           subscriber.onSubscribe(sub);
         } catch (Throwable t) {
-          subscriber.onError(t);
+          signalError(sub.subscriber, t);
         }
       });
     } else {
@@ -164,12 +164,12 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
       try {
         subscriber.onNext(data);
       } catch (Throwable t) {
-        subscriber.onError(t);
+        signalError(subscriber, t);
       }
     });
   }
 
-  private class SubscriptionImpl implements Subscription {
+  public class SubscriptionImpl implements Subscription {
 
     private final Subscriber<? super T> subscriber;
     // We start at Long.MIN_VALUE so we know when we've requested more then Long.MAX_VALUE. See 3.17 of spec
@@ -192,12 +192,12 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
       if (n > 0) {
         // More then Long.MAX_VALUE pending
         if (tokens.addAndGet(n) > 0) {
-          subscriber.onError(new IllegalStateException("3.17 Subscriber has more then Long.MAX_VALUE (2^63-1) currently pending."));
+          signalError(subscriber, new IllegalStateException("3.17 Subscriber has more then Long.MAX_VALUE (2^63-1) currently pending."));
         } else {
           checkSend();
         }
       } else {
-        subscriber.onError(new IllegalArgumentException("3.9 Subscriber cannot request less then 1 for the number of elements."));
+        signalError(subscriber, new IllegalArgumentException("3.9 Subscriber cannot request less then 1 for the number of elements."));
       }
     }
 
@@ -221,5 +221,10 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
     public int hashCode() {
       return subscriber.hashCode();
     }
+  }
+
+  private void signalError(Subscriber<? super T> subscriber, Throwable error) {
+    subscriptions.removeIf(sub -> sub.subscriber == subscriber);
+    subscriber.onError(error);
   }
 }
