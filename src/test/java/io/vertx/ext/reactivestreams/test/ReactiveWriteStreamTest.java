@@ -25,6 +25,7 @@ import org.reactivestreams.Subscription;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -238,5 +239,95 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
     public void onComplete() {
 
     }
+  }
+
+  @Test
+  public void testCancelSubscriptionOnError1() {
+    ReactiveWriteStream<Buffer> rws = ReactiveWriteStream.writeStream(vertx);
+    AtomicBoolean failed = new AtomicBoolean();
+    MySubscriber subscriber1 = new MySubscriber() {
+      @Override
+      public void onSubscribe(Subscription subscription) {
+        super.onSubscribe(subscription);
+        throw new RuntimeException();
+      }
+      @Override
+      public void onNext(Buffer buffer) {
+        fail();
+      }
+      @Override
+      public void onError(Throwable throwable) {
+        failed.set(true);
+      }
+    };
+    rws.subscribe(subscriber1);
+    MySubscriber subscriber2 = new MySubscriber() {
+      @Override
+      public void onSubscribe(Subscription subscription) {
+        subscription.request(1);
+        super.onSubscribe(subscription);
+      }
+      int count = 0;
+      @Override
+      public void onNext(Buffer buffer) {
+        if (++count == 1) {
+          testComplete();
+        }
+      }
+    };
+    rws.subscribe(subscriber2);
+    waitUntil(() -> subscriber1.subscription != null);
+    waitUntil(() -> subscriber2.subscription != null);
+    waitUntil(failed::get);
+    rws.write(createRandomBuffers(1).get(0));
+    await();
+  }
+
+  @Test
+  public void testCancelSubscriptionOnError2() {
+    ReactiveWriteStream<Buffer> rws = ReactiveWriteStream.writeStream(vertx);
+    AtomicBoolean failed = new AtomicBoolean();
+    MySubscriber subscriber1 = new MySubscriber() {
+      @Override
+      public void onSubscribe(Subscription subscription) {
+        subscription.request(2);
+        super.onSubscribe(subscription);
+      }
+      @Override
+      public void onNext(Buffer buffer) {
+        if (!failed.get()) {
+          throw new RuntimeException();
+        } else {
+          fail();
+        }
+      }
+      @Override
+      public void onError(Throwable throwable) {
+        failed.set(true);
+      }
+    };
+    rws.subscribe(subscriber1);
+    MySubscriber subscriber2 = new MySubscriber() {
+      @Override
+      public void onSubscribe(Subscription subscription) {
+        subscription.request(3);
+        super.onSubscribe(subscription);
+      }
+      int count = 0;
+      @Override
+      public void onNext(Buffer buffer) {
+        if (++count == 3) {
+          testComplete();
+        }
+      }
+    };
+    rws.subscribe(subscriber2);
+    waitUntil(() -> subscriber1.subscription != null);
+    waitUntil(() -> subscriber2.subscription != null);
+    rws.write(createRandomBuffers(1).get(0));
+    waitUntil(failed::get);
+    rws.write(createRandomBuffers(1).get(0));
+    rws.write(createRandomBuffers(1).get(0));
+    await();
   }
 }
