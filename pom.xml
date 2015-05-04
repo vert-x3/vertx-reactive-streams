@@ -33,7 +33,7 @@
 
   <properties>
     <vertx.version>3.0.0-SNAPSHOT</vertx.version>
-    <reactive.streams.version>1.0.0.final</reactive.streams.version>
+    <reactive.streams.version>1.0.0</reactive.streams.version>
     <stack.version>3.0.0-SNAPSHOT</stack.version>
     <asciidoc.dir>${project.basedir}/src/main/asciidoc</asciidoc.dir>
   </properties>
