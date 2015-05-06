@@ -27,7 +27,7 @@
   </parent>
 
   <artifactId>vertx-reactive-streams</artifactId>
-  <version>3.0.0-SNAPSHOT</version>
+  <version>3.0.0-milestone5a</version>
 
   <name>Vert.x - Reactive Streams</name>
 
@@ -38,46 +38,40 @@
     <asciidoc.dir>${project.basedir}/src/main/asciidoc</asciidoc.dir>
   </properties>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-dependencies</artifactId>
-        <version>${stack.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
   <dependencies>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-core</artifactId>
+      <version>3.0.0-milestone4</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-codegen</artifactId>
+      <version>3.0.0-milestone4</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-lang-groovy</artifactId>
+      <version>3.0.0-milestone4</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-lang-js</artifactId>
+      <version>3.0.0-milestone4</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-docgen</artifactId>
+      <version>3.0.0-milestone4</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-codetrans</artifactId>
+      <version>3.0.0-milestone4</version>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -102,6 +96,7 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-core</artifactId>
+      <version>3.0.0-milestone4</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
