@@ -40,6 +40,11 @@ public class PublisherVerificationTest extends PublisherVerification<Buffer> {
   }
 
   @Override
+  public long boundedDepthOfOnNextAndRequestRecursion() {
+    return super.boundedDepthOfOnNextAndRequestRecursion() + 1;
+  }
+
+  @Override
   public Publisher<Buffer> createFailedPublisher() {
 
     return new ReactiveWriteStreamImpl<Buffer>(vertx) {

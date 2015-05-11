@@ -37,6 +37,8 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   private int writeQueueMaxSize = DEFAULT_WRITE_QUEUE_MAX_SIZE;
   private final Context ctx;
   private boolean closed;
+  private final ThreadLocal<Boolean> reentrant = new ThreadLocal<>();
+
 
   public ReactiveWriteStreamImpl(Vertx vertx) {
     ctx = vertx.getOrCreateContext();
@@ -160,13 +162,20 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   }
 
   protected void onNext(Context context, Subscriber<? super T> subscriber, T data) {
-    context.runOnContext(v -> {
+    Handler<Void> action = v -> {
       try {
         subscriber.onNext(data);
       } catch (Throwable t) {
         signalError(subscriber, t);
       }
-    });
+    };
+    if (context != Vertx.currentContext() || Boolean.TRUE == reentrant.get()) {
+      context.runOnContext(action);
+    } else {
+      reentrant.set(Boolean.TRUE);
+      action.handle(null);
+      reentrant.set(null);
+    }
   }
 
   public class SubscriptionImpl implements Subscription {
