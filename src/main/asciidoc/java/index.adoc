@@ -26,7 +26,15 @@ stream to the body of a server side HTTP response. This will handle back pressur
 
 [source,java]
 ----
-`link:../../apidocs/examples/ReactiveStreamsExamples.html#example1-io.vertx.core.http.HttpServerResponse-org.reactivestreams.Publisher-[example1]`
+ReactiveReadStream<Buffer> rrs = ReactiveReadStream.readStream();
+
+// Subscribe the read stream to the publisher
+otherPublisher.subscribe(rrs);
+
+// Pump from the read stream to the http response
+Pump pump = Pump.pump(rrs, response);
+
+pump.start();
 ----
 
 == Reactive Write Stream
@@ -45,5 +53,13 @@ a server side HTTP request to that subscriber. This will handle back pressure au
 
 [source,java]
 ----
-`link:../../apidocs/examples/ReactiveStreamsExamples.html#example2-io.vertx.core.Vertx-io.vertx.core.http.HttpServerRequest-org.reactivestreams.Subscriber-[example2]`
+ReactiveWriteStream<Buffer> rws = ReactiveWriteStream.writeStream(vertx);
+
+// Subscribe the other subscriber to the write stream
+rws.subscribe(otherSubscriber);
+
+// Pump the http request to the write stream
+Pump pump = Pump.pump(request, rws);
+
+pump.start();
 ----

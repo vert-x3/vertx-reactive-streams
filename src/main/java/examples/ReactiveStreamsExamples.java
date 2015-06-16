@@ -21,6 +21,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.streams.Pump;
+import io.vertx.docgen.Source;
 import io.vertx.ext.reactivestreams.ReactiveReadStream;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
 import org.reactivestreams.Publisher;
@@ -29,6 +30,7 @@ import org.reactivestreams.Subscriber;
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
+@Source(translate = false)
 public class ReactiveStreamsExamples {
 
   public void example1(HttpServerResponse response, Publisher<Buffer> otherPublisher) {
