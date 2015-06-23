@@ -6,7 +6,7 @@ image:https://vertx.ci.cloudbees.com/buildStatus/icon?job=vert.x3-reactive-strea
 processing with non-blocking back pressure on the JVM."
 
 Please see the in source asciidoc documentation or the main documentation on the web-site for a full description
-of Apex:
+of Reactive Streams:
 
 * Web-site docs
 * link:src/main/asciidoc/java/index.adoc[in-source docs]
