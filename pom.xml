@@ -141,11 +141,16 @@
         <version>1.5.2</version>
         <configuration>
           <sourceDirectory>${asciidoc.dir}</sourceDirectory>
-          <outputDirectory>${project.build.directory}/docs/vertx-core</outputDirectory>
+          <outputDirectory>${project.build.directory}/docs/${project.artifactId}</outputDirectory>
           <preserveDirectories>true</preserveDirectories>
           <relativeBaseDir>true</relativeBaseDir>
           <backend>html</backend>
           <doctype>book</doctype>
+          <attributes>
+            <maven-groupId>${project.groupId}</maven-groupId>
+            <maven-artifactId>${project.artifactId}</maven-artifactId>
+            <maven-version>${project.version}</maven-version>
+          </attributes>
         </configuration>
         <executions>
           <execution>
