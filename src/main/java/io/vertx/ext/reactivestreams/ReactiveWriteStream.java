@@ -58,6 +58,12 @@ public interface ReactiveWriteStream<T> extends WriteStream<T>, Publisher<T> {
   ReactiveWriteStream<T> drainHandler(Handler<Void> handler);
 
   /**
+   * Calls {@link #close()}.
+   */
+  @Override
+  void end();
+
+  /**
    * Close the stream
    *
    * @return a reference to this for a fluent API

@@ -104,6 +104,11 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   }
 
   @Override
+  public void end() {
+    close();
+  }
+
+  @Override
   public synchronized ReactiveWriteStream<T> close() {
     if (!closed) {
       complete();
