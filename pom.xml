@@ -23,7 +23,7 @@
   <parent>
     <groupId>io.vertx</groupId>
     <artifactId>vertx-parent</artifactId>
-    <version>8</version>
+    <version>9</version>
   </parent>
 
   <artifactId>vertx-reactive-streams</artifactId>
@@ -34,7 +34,6 @@
   <properties>
     <reactive.streams.version>1.0.0</reactive.streams.version>
     <stack.version>3.3.0-SNAPSHOT</stack.version>
-    <asciidoc.dir>${project.basedir}/src/main/asciidoc</asciidoc.dir>
   </properties>
 
   <dependencyManagement>
@@ -89,14 +88,6 @@
       <artifactId>reactive-streams-tck</artifactId>
       <version>${reactive.streams.version}</version>
       <scope>test</scope>
-<!--
-      <exclusions>
-        <exclusion>
-          <groupId>org.testng</groupId>
-          <artifactId>testng</artifactId>
-        </exclusion>
-      </exclusions>
--->
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
@@ -108,7 +99,7 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
-      <version>4.11</version>
+      <version>4.12</version>
     </dependency>
   </dependencies>
 
@@ -141,15 +132,6 @@
       <plugin>
         <groupId>org.asciidoctor</groupId>
         <artifactId>asciidoctor-maven-plugin</artifactId>
-        <version>1.5.2</version>
-        <configuration>
-          <sourceDirectory>${asciidoc.dir}</sourceDirectory>
-          <outputDirectory>${project.build.directory}/docs/${project.artifactId}</outputDirectory>
-          <preserveDirectories>true</preserveDirectories>
-          <relativeBaseDir>true</relativeBaseDir>
-          <backend>html</backend>
-          <doctype>book</doctype>
-        </configuration>
         <executions>
           <execution>
             <goals>
