@@ -39,7 +39,7 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
     MySubscriber subscriber = new MySubscriber();
     rws.subscribe(subscriber);
 
-    waitUntil(() -> subscriber.subscription != null);
+    assertWaitUntil(() -> subscriber.subscription != null);
 
     List<Buffer> buffers = createRandomBuffers(4);
     for (Buffer buffer: buffers) {
@@ -50,12 +50,12 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
 
     subscriber.subscription.request(1);
 
-    waitUntil(() -> subscriber.buffers.size() == 1);
+    assertWaitUntil(() -> subscriber.buffers.size() == 1);
     assertEquals(1, subscriber.buffers.size());
     assertSame(buffers.get(0), subscriber.buffers.get(0));
 
     subscriber.subscription.request(2);
-    waitUntil(() -> subscriber.buffers.size() == 3);
+    assertWaitUntil(() -> subscriber.buffers.size() == 3);
     assertEquals(3, subscriber.buffers.size());
     assertSame(buffers.get(1), subscriber.buffers.get(1));
     assertSame(buffers.get(2), subscriber.buffers.get(2));
@@ -69,7 +69,7 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
     MySubscriber subscriber = new MySubscriber();
     rws.subscribe(subscriber);
 
-    waitUntil(() -> subscriber.subscription != null);
+    assertWaitUntil(() -> subscriber.subscription != null);
     subscriber.subscription.request(3);
 
     List<Buffer> buffers = createRandomBuffers(4);
@@ -77,7 +77,7 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
       rws.write(buffer);
     }
 
-    waitUntil(() -> subscriber.buffers.size() == 3);
+    assertWaitUntil(() -> subscriber.buffers.size() == 3);
     assertEquals(3, subscriber.buffers.size());
     assertSame(buffers.get(0), subscriber.buffers.get(0));
     assertSame(buffers.get(1), subscriber.buffers.get(1));
@@ -100,9 +100,9 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
     MySubscriber subscriber3 = new MySubscriber();
     rws.subscribe(subscriber3);
 
-    waitUntil(() -> subscriber1.subscription != null);
-    waitUntil(() -> subscriber2.subscription != null);
-    waitUntil(() -> subscriber3.subscription != null);
+    assertWaitUntil(() -> subscriber1.subscription != null);
+    assertWaitUntil(() -> subscriber2.subscription != null);
+    assertWaitUntil(() -> subscriber3.subscription != null);
 
     List<Buffer> buffers = createRandomBuffers(10);
     for (Buffer buffer: buffers) {
@@ -125,9 +125,9 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
     assertEquals(0, subscriber3.buffers.size());
 
     subscriber3.subscription.request(1);
-    waitUntil(() -> subscriber1.buffers.size() == 1);
-    waitUntil(() -> subscriber2.buffers.size() == 1);
-    waitUntil(() -> subscriber3.buffers.size() == 1);
+    assertWaitUntil(() -> subscriber1.buffers.size() == 1);
+    assertWaitUntil(() -> subscriber2.buffers.size() == 1);
+    assertWaitUntil(() -> subscriber3.buffers.size() == 1);
     assertEquals(1, subscriber1.buffers.size());
     assertEquals(1, subscriber2.buffers.size());
     assertEquals(1, subscriber3.buffers.size());
@@ -144,9 +144,9 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
     assertEquals(1, subscriber2.buffers.size());
     assertEquals(1, subscriber3.buffers.size());
     subscriber3.subscription.request(2);
-    waitUntil(() -> subscriber1.buffers.size() == 3);
-    waitUntil(() -> subscriber2.buffers.size() == 3);
-    waitUntil(() -> subscriber3.buffers.size() == 3);
+    assertWaitUntil(() -> subscriber1.buffers.size() == 3);
+    assertWaitUntil(() -> subscriber2.buffers.size() == 3);
+    assertWaitUntil(() -> subscriber3.buffers.size() == 3);
     assertEquals(3, subscriber1.buffers.size());
     assertEquals(3, subscriber2.buffers.size());
     assertEquals(3, subscriber3.buffers.size());
@@ -165,9 +165,9 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
     assertEquals(3, subscriber2.buffers.size());
     assertEquals(3, subscriber3.buffers.size());
     subscriber3.subscription.request(2);
-    waitUntil(() -> subscriber1.buffers.size() == 5);
-    waitUntil(() -> subscriber2.buffers.size() == 5);
-    waitUntil(() -> subscriber3.buffers.size() == 5);
+    assertWaitUntil(() -> subscriber1.buffers.size() == 5);
+    assertWaitUntil(() -> subscriber2.buffers.size() == 5);
+    assertWaitUntil(() -> subscriber3.buffers.size() == 5);
     assertEquals(5, subscriber1.buffers.size());
     assertEquals(5, subscriber2.buffers.size());
     assertEquals(5, subscriber3.buffers.size());
@@ -209,7 +209,7 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
       assertFalse(rws.writeQueueFull());
       testComplete();
     });
-    waitUntil(() -> subscriber.subscription != null);
+    assertWaitUntil(() -> subscriber.subscription != null);
     subscriber.subscription.request(2);
     await();
   }
@@ -276,9 +276,9 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
       }
     };
     rws.subscribe(subscriber2);
-    waitUntil(() -> subscriber1.subscription != null);
-    waitUntil(() -> subscriber2.subscription != null);
-    waitUntil(failed::get);
+    assertWaitUntil(() -> subscriber1.subscription != null);
+    assertWaitUntil(() -> subscriber2.subscription != null);
+    assertWaitUntil(failed::get);
     rws.write(createRandomBuffers(1).get(0));
     await();
   }
@@ -322,10 +322,10 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
       }
     };
     rws.subscribe(subscriber2);
-    waitUntil(() -> subscriber1.subscription != null);
-    waitUntil(() -> subscriber2.subscription != null);
+    assertWaitUntil(() -> subscriber1.subscription != null);
+    assertWaitUntil(() -> subscriber2.subscription != null);
     rws.write(createRandomBuffers(1).get(0));
-    waitUntil(failed::get);
+    assertWaitUntil(failed::get);
     rws.write(createRandomBuffers(1).get(0));
     rws.write(createRandomBuffers(1).get(0));
     await();
