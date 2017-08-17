@@ -35,7 +35,7 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   private final Queue<T> pending = new ArrayDeque<>();
   private Handler<Void> drainHandler;
   private int writeQueueMaxSize = DEFAULT_WRITE_QUEUE_MAX_SIZE;
-  private final Context ctx;
+  protected final Context ctx;
   private boolean closed;
 
   public ReactiveWriteStreamImpl(Vertx vertx) {

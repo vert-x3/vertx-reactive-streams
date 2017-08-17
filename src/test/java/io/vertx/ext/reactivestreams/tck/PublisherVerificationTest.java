@@ -45,7 +45,6 @@ public class PublisherVerificationTest extends PublisherVerification<Buffer> {
     return new ReactiveWriteStreamImpl<Buffer>(vertx) {
       @Override
       public void subscribe(Subscriber<? super Buffer> subscriber) {
-        Context ctx = vertx.getOrCreateContext();
         super.subscribe(subscriber);
         ctx.runOnContext(v -> {
           // Now signal an error
