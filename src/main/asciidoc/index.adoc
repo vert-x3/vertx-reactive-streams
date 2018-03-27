@@ -24,7 +24,7 @@ To use Vert.x Reactive Streams, add the following dependency to the _dependencie
 <dependency>
   <groupId>io.vertx</groupId>
   <artifactId>vertx-reactive-streams</artifactId>
-  <version>3.5.1</version>
+  <version>${maven.version}</version>
 </dependency>
 ----
 
@@ -32,12 +32,12 @@ To use Vert.x Reactive Streams, add the following dependency to the _dependencie
 
 [source,groovy,subs="+attributes"]
 ----
-compile io.vertx:vertx-reactive-streams:3.5.1
+compile io.vertx:vertx-reactive-streams:${maven.version}
 ----
 
 == Reactive Read Stream
 
-We provide an implementation of the Vert.x `ReadStream` interface with `link:../../apidocs/io/vertx/ext/reactivestreams/ReactiveReadStream.html[ReactiveReadStream]`
+We provide an implementation of the Vert.x `ReadStream` interface with {@link io.vertx.ext.reactivestreams.ReactiveReadStream}
 which also implements a reactive streams `Subscriber`.
 
 You can pass an instance of this to any reactive streams `Publisher` (e.g. a Publisher from Akka) and then you will be
@@ -48,20 +48,12 @@ stream to the body of a server side HTTP response. This will handle back pressur
 
 [source,java]
 ----
-ReactiveReadStream<Buffer> rrs = ReactiveReadStream.readStream();
-
-// Subscribe the read stream to the publisher
-otherPublisher.subscribe(rrs);
-
-// Pump from the read stream to the http response
-Pump pump = Pump.pump(rrs, response);
-
-pump.start();
+{@link examples.ReactiveStreamsExamples#example1}
 ----
 
 == Reactive Write Stream
 
-We also provide an implementation of the Vert.x `WriteStream` interface with `link:../../apidocs/io/vertx/ext/reactivestreams/ReactiveWriteStream.html[ReactiveWriteStream]`
+We also provide an implementation of the Vert.x `WriteStream` interface with {@link io.vertx.ext.reactivestreams.ReactiveWriteStream}
 which also implements a reactive streams `Publisher`. You can take any reactive streams `Subscriber`
 (e.g. a Subscriber from Akka) and then you will be able* to write to it like any other Vert.x `WriteStream`.
 (e.g. use a `Pump` to pump it from a `ReadStream`).
@@ -75,13 +67,5 @@ a server side HTTP request to that subscriber. This will handle back pressure au
 
 [source,java]
 ----
-ReactiveWriteStream<Buffer> rws = ReactiveWriteStream.writeStream(vertx);
-
-// Subscribe the other subscriber to the write stream
-rws.subscribe(otherSubscriber);
-
-// Pump the http request to the write stream
-Pump pump = Pump.pump(request, rws);
-
-pump.start();
+{@link examples.ReactiveStreamsExamples#example2}
 ----
