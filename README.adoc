@@ -5,8 +5,6 @@ image:https://vertx.ci.cloudbees.com/buildStatus/icon?job=vert.x3-reactive-strea
 "link:http://www.reactive-streams.org/[Reactive Streams] is an initiative to provide a standard for asynchronous stream
 processing with non-blocking back pressure on the JVM."
 
-Please see the in source asciidoc documentation or the main documentation on the web-site for a full description
-of Reactive Streams:
+Please see the main documentation on the web-site for a full description:
 
-* Web-site docs
-* link:src/main/asciidoc/java/index.adoc[in-source docs]
+* https://vertx.io/docs/vertx-reactive-streams/java/[Web-site documentation]
