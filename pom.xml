@@ -24,13 +24,13 @@
   </parent>
 
   <artifactId>vertx-reactive-streams</artifactId>
-  <version>3.5.2.CR3</version>
+  <version>3.5.2-SNAPSHOT</version>
 
   <name>Vert.x - Reactive Streams</name>
 
   <properties>
     <reactive.streams.version>1.0.2</reactive.streams.version>
-    <stack.version>3.5.2.CR3</stack.version>
+    <stack.version>3.5.2-SNAPSHOT</stack.version>
   </properties>
 
   <dependencyManagement>
