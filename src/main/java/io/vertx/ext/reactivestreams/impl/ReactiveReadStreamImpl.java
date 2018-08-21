@@ -36,7 +36,7 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
 
   private Subscription subscription;
   private final Queue<T> pending = new ArrayDeque<>();
-  private boolean paused;
+  private long demand = Long.MAX_VALUE;
   private long tokens;
 
   public ReactiveReadStreamImpl(long batchSize) {
@@ -45,7 +45,7 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
 
   public synchronized ReactiveReadStream<T> handler(Handler<T> handler) {
     this.dataHandler = handler;
-    if (dataHandler != null && !paused) {
+    if (dataHandler != null && demand > 0L) {
       checkRequestTokens();
     }
     return this;
@@ -53,19 +53,32 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
 
   @Override
   public synchronized ReactiveReadStream<T> pause() {
-    this.paused = true;
+    this.demand = 0L;
+    return this;
+  }
+
+  @Override
+  public ReactiveReadStream<T> fetch(long amount) {
+    if (amount > 0L) {
+      demand += amount;
+      if (demand < 0L) {
+        demand = Long.MAX_VALUE;
+      }
+      T data;
+      while (demand > 0L && (data = pending.poll()) != null) {
+        if (demand != Long.MAX_VALUE) {
+          demand--;
+        }
+        handleData(data);
+      }
+      checkRequestTokens();
+    }
     return this;
   }
 
   @Override
   public synchronized ReactiveReadStream<T> resume() {
-    this.paused = false;
-    T data;
-    while ((data = pending.poll()) != null) {
-      handleData(data);
-    }
-    checkRequestTokens();
-    return this;
+    return fetch(Long.MAX_VALUE);
   }
 
   @Override
@@ -98,7 +111,18 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
       throw new NullPointerException("data");
     }
     checkUnsolicitedTokens();
-    handleData(data);
+    if (demand > 0L) {
+      if (demand != Long.MAX_VALUE) {
+        demand--;
+      }
+      if (pending.size() > 0) {
+        pending.add(data);
+        data = pending.poll();
+      }
+      handleData(data);
+    } else {
+      pending.add(data);
+    }
   }
 
   @Override
@@ -125,9 +149,7 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
   }
 
   private synchronized void handleData(T data) {
-    if (paused) {
-      pending.add(data);
-    } else if (dataHandler != null) {
+    if (dataHandler != null) {
       dataHandler.handle(data);
       tokens--;
       checkRequestTokens();
@@ -135,7 +157,7 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
   }
 
   private void checkRequestTokens() {
-    if (!paused && subscription != null && tokens == 0) {
+    if (demand > 0L && subscription != null && tokens == 0) {
       tokens = batchSize;
       subscription.request(batchSize);
     }

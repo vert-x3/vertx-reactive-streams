@@ -189,6 +189,46 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
   }
 
   @Test
+  public void testFetch() throws Exception {
+    ReactiveReadStream<Buffer> rws = ReactiveReadStream.readStream();
+    MyPublisher publisher = new MyPublisher();
+    publisher.subscribe(rws);
+    assertNotNull(publisher.subscription);
+    assertEquals(0, publisher.subscription.requestedTimes);
+    List<Buffer> received = new ArrayList<>();
+    rws.handler(received::add);
+    assertEquals(1, publisher.subscription.requestedTimes);
+    assertEquals(ReactiveReadStream.DEFAULT_BATCH_SIZE, publisher.subscription.requested);
+    int numBuffers = 4;
+    List<Buffer> buffers = createRandomBuffers(numBuffers);
+    for (Buffer buffer: buffers) {
+      publisher.subscriber.onNext(buffer);
+    }
+    assertEquals(numBuffers, received.size());
+    for (int i = 0; i < numBuffers; i++) {
+      assertEquals(buffers.get(i), received.get(i));
+    }
+    rws.pause();
+    assertEquals(2, publisher.subscription.requestedTimes);
+    assertEquals(ReactiveReadStream.DEFAULT_BATCH_SIZE * 2, publisher.subscription.requested);
+    assertEquals(2, publisher.subscription.requestedTimes);
+    assertEquals(ReactiveReadStream.DEFAULT_BATCH_SIZE * 2, publisher.subscription.requested);
+    buffers.clear();
+    received.clear();
+    buffers = createRandomBuffers(numBuffers);
+    for (Buffer buffer: buffers) {
+      publisher.subscriber.onNext(buffer);
+    }
+    for (int i = 0;i < numBuffers;i++) {
+      rws.fetch(1);
+      assertEquals(1 + i, received.size());
+    }
+    for (int i = 0; i < numBuffers; i++) {
+      assertEquals(buffers.get(i), received.get(i));
+    }
+  }
+
+  @Test
   public void testOnError() throws Exception {
     ReactiveReadStream<Buffer> rws = ReactiveReadStream.readStream();
     MyPublisher publisher = new MyPublisher();
