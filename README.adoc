@@ -1,6 +1,6 @@
 = Reactive Streams for Vert.x
 
-image:https://vertx.ci.cloudbees.com/buildStatus/icon?job=vert.x3-reactive-streams["Build Status",link="https://vertx.ci.cloudbees.com/view/vert.x-3/job/vert.x3-reactive-streams/"]
+image:https://travis-ci.org/vert-x3/vertx-reactive-streams.svg?branch=master?branch=master["Build Status",link="https://travis-ci.org/vert-x3/vertx-reactive-streams"]
 
 "link:http://www.reactive-streams.org/[Reactive Streams] is an initiative to provide a standard for asynchronous stream
 processing with non-blocking back pressure on the JVM."
