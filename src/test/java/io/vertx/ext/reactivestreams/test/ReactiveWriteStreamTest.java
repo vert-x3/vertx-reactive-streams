@@ -16,6 +16,7 @@
 
 package io.vertx.ext.reactivestreams.test;
 
+import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
 import io.vertx.test.core.TestUtils;
@@ -329,5 +330,32 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
     rws.write(createRandomBuffers(1).get(0));
     rws.write(createRandomBuffers(1).get(0));
     await();
+  }
+
+  @Test
+  public void testWriteHandler() {
+    ReactiveWriteStream<Buffer> rws = ReactiveWriteStream.writeStream(vertx);
+    Future<Void> f1 = Future.future();
+    rws.write(createRandomBuffers(1).get(0), f1);
+    assertFalse(f1.isComplete());
+    rws.subscribe(new MySubscriber() {
+      @Override
+      public void onSubscribe(Subscription subscription) {
+        subscription.request(1);
+      }
+    });
+    waitUntil(f1::succeeded);
+  }
+
+  @Test
+  public void testWriteHandlerFailure() {
+    ReactiveWriteStream<Buffer> rws = ReactiveWriteStream.writeStream(vertx);
+    Future<Void> f1 = Future.future();
+    rws.write(createRandomBuffers(1).get(0), f1);
+    assertFalse(f1.isComplete());
+    Future<Void> f2 = Future.future();
+    rws.end(f2);
+    waitUntil(f1::failed);
+    waitUntil(f2::succeeded);
   }
 }
