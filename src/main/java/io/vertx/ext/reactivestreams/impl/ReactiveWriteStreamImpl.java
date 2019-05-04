@@ -16,9 +16,12 @@
 
 package io.vertx.ext.reactivestreams.impl;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.net.impl.ConnectionBase;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -32,7 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
 
   private Set<SubscriptionImpl> subscriptions = new HashSet<>();
-  private final Queue<T> pending = new ArrayDeque<>();
+  private final Queue<Item<T>> pending = new ArrayDeque<>();
   private Handler<Void> drainHandler;
   private int writeQueueMaxSize = DEFAULT_WRITE_QUEUE_MAX_SIZE;
   protected final Context ctx;
@@ -69,8 +72,13 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
 
   @Override
   public synchronized ReactiveWriteStream<T> write(T data) {
+    return write(data, null);
+  }
+
+  @Override
+  public ReactiveWriteStream<T> write(T data, Handler<AsyncResult<Void>> handler) {
     checkClosed();
-    pending.add(data);
+    pending.add(new Item<>(data, handler));
     checkSend();
     return this;
   }
@@ -109,12 +117,32 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   }
 
   @Override
-  public synchronized ReactiveWriteStream<T> close() {
-    if (!closed) {
+  public void end(Handler<AsyncResult<Void>> handler) {
+    close();
+    if (handler != null) {
+      ctx.runOnContext(v -> handler.handle(Future.succeededFuture()));
+    }
+  }
+
+  @Override
+  public ReactiveWriteStream<T> close() {
+    synchronized (this) {
+      if (closed) {
+        return this;
+      }
+      closed = true;
       complete();
       subscriptions.clear();
+      Future<Void> closedFut = Future.failedFuture(ConnectionBase.CLOSED_EXCEPTION);
+      for (Item<T> item: pending) {
+        Handler<AsyncResult<Void>> handler = item.handler;
+        if (handler != null) {
+          ctx.runOnContext(v -> {
+            handler.handle(closedFut);
+          });
+        }
+      }
       pending.clear();
-      closed = true;
     }
     return this;
   }
@@ -158,9 +186,12 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
     }
   }
 
-  private void sendToSubscribers(T data) {
+  private void sendToSubscribers(Item<T> item) {
     for (SubscriptionImpl sub: subscriptions) {
-      onNext(ctx, sub.subscriber, data);
+      onNext(ctx, sub.subscriber, item.value);
+      if (item.handler != null) {
+        item.handler.handle(Future.succeededFuture());
+      }
     }
   }
 
@@ -232,4 +263,14 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
     subscriptions.removeIf(sub -> sub.subscriber == subscriber);
     subscriber.onError(error);
   }
+
+  static class Item<T> {
+    final T value;
+    final Handler<AsyncResult<Void>> handler;
+    Item(T value, Handler<AsyncResult<Void>> handler) {
+      this.value = value;
+      this.handler = handler;
+    }
+  }
+
 }

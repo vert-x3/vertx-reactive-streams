@@ -16,6 +16,7 @@
 
 package io.vertx.ext.reactivestreams;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.WriteStream;
@@ -50,6 +51,9 @@ public interface ReactiveWriteStream<T> extends WriteStream<T>, Publisher<T> {
 
   @Override
   ReactiveWriteStream<T> write(T data);
+
+  @Override
+  ReactiveWriteStream<T> write(T data, Handler<AsyncResult<Void>> handler);
 
   @Override
   ReactiveWriteStream<T> setWriteQueueMaxSize(int maxSize);
