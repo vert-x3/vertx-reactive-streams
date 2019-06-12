@@ -17,6 +17,7 @@
 package io.vertx.ext.reactivestreams.test;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
 import io.vertx.test.core.TestUtils;
@@ -335,27 +336,27 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
   @Test
   public void testWriteHandler() {
     ReactiveWriteStream<Buffer> rws = ReactiveWriteStream.writeStream(vertx);
-    Future<Void> f1 = Future.future();
+    Promise<Void> f1 = Promise.promise();
     rws.write(createRandomBuffers(1).get(0), f1);
-    assertFalse(f1.isComplete());
+    assertFalse(f1.future().isComplete());
     rws.subscribe(new MySubscriber() {
       @Override
       public void onSubscribe(Subscription subscription) {
         subscription.request(1);
       }
     });
-    waitUntil(f1::succeeded);
+    waitUntil(f1.future()::succeeded);
   }
 
   @Test
   public void testWriteHandlerFailure() {
     ReactiveWriteStream<Buffer> rws = ReactiveWriteStream.writeStream(vertx);
-    Future<Void> f1 = Future.future();
+    Promise<Void> f1 = Promise.promise();
     rws.write(createRandomBuffers(1).get(0), f1);
-    assertFalse(f1.isComplete());
-    Future<Void> f2 = Future.future();
+    assertFalse(f1.future().isComplete());
+    Promise<Void> f2 = Promise.promise();
     rws.end(f2);
-    waitUntil(f1::failed);
-    waitUntil(f2::succeeded);
+    waitUntil(f1.future()::failed);
+    waitUntil(f2.future()::succeeded);
   }
 }
