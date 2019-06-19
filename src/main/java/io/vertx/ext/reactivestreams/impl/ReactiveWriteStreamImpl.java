@@ -189,9 +189,9 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   private void sendToSubscribers(Item<T> item) {
     for (SubscriptionImpl sub: subscriptions) {
       onNext(ctx, sub.subscriber, item.value);
-      if (item.handler != null) {
-        item.handler.handle(Future.succeededFuture());
-      }
+    }
+    if (item.handler != null) {
+      item.handler.handle(Future.succeededFuture());
     }
   }
 
