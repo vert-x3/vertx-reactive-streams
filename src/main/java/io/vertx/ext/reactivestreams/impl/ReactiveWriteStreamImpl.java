@@ -20,6 +20,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.impl.ConnectionBase;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
@@ -71,16 +72,17 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   }
 
   @Override
-  public synchronized ReactiveWriteStream<T> write(T data) {
-    return write(data, null);
+  public synchronized Future<Void> write(T data) {
+    Promise<Void> promise = Promise.promise();
+    write(data, promise);
+    return promise.future();
   }
 
   @Override
-  public ReactiveWriteStream<T> write(T data, Handler<AsyncResult<Void>> handler) {
+  public void write(T data, Handler<AsyncResult<Void>> handler) {
     checkClosed();
     pending.add(new Item<>(data, handler));
     checkSend();
-    return this;
   }
 
   @Override
@@ -109,11 +111,6 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   @Override
   public synchronized ReactiveWriteStream<T> exceptionHandler(Handler<Throwable> handler) {
     return this;
-  }
-
-  @Override
-  public void end() {
-    close();
   }
 
   @Override
