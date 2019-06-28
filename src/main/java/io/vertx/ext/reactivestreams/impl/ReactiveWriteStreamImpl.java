@@ -147,7 +147,7 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
     return this;
   }
 
-  private void checkSend() {
+  private synchronized void checkSend() {
     if (!subscriptions.isEmpty()) {
       long availableTokens = getAvailable();
       long toSend = Math.min(availableTokens, pending.size());
