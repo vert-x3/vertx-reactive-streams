@@ -29,7 +29,7 @@
   <name>Vert.x - Reactive Streams</name>
 
   <properties>
-    <reactive.streams.version>1.0.2</reactive.streams.version>
+    <reactive.streams.version>1.0.3</reactive.streams.version>
     <stack.version>4.0.0-SNAPSHOT</stack.version>
   </properties>
 
