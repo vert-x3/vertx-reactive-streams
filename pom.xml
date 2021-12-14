@@ -29,7 +29,7 @@
       
     <artifactId>vertx-reactive-streams</artifactId>
       
-    <version>3.9.11</version>
+    <version>3.9.12-SNAPSHOT</version>
       
     <name>Vert.x - Reactive Streams</name>
       
@@ -37,7 +37,7 @@
             
         <reactive.streams.version>1.0.3</reactive.streams.version>
             
-        <stack.version>3.9.11</stack.version>
+        <stack.version>3.9.12-SNAPSHOT</stack.version>
           
     </properties>
       
