@@ -337,7 +337,7 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
   public void testWriteHandler() {
     ReactiveWriteStream<Buffer> rws = ReactiveWriteStream.writeStream(vertx);
     Promise<Void> f1 = Promise.promise();
-    rws.write(createRandomBuffers(1).get(0), f1);
+    rws.write(createRandomBuffers(1).get(0)).onComplete(f1);
     assertFalse(f1.future().isComplete());
     rws.subscribe(new MySubscriber() {
       @Override
@@ -352,10 +352,10 @@ public class ReactiveWriteStreamTest extends ReactiveStreamTestBase {
   public void testWriteHandlerFailure() {
     ReactiveWriteStream<Buffer> rws = ReactiveWriteStream.writeStream(vertx);
     Promise<Void> f1 = Promise.promise();
-    rws.write(createRandomBuffers(1).get(0), f1);
+    rws.write(createRandomBuffers(1).get(0)).onComplete(f1);
     assertFalse(f1.future().isComplete());
     Promise<Void> f2 = Promise.promise();
-    rws.end(f2);
+    rws.end().onComplete(f2);
     waitUntil(f1.future()::failed);
     waitUntil(f2.future()::succeeded);
   }
