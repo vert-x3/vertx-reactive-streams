@@ -54,19 +54,10 @@ public interface ReactiveWriteStream<T> extends WriteStream<T>, Publisher<T> {
   Future<Void> write(T data);
 
   @Override
-  void write(T data, Handler<AsyncResult<Void>> handler);
-
-  @Override
   ReactiveWriteStream<T> setWriteQueueMaxSize(int maxSize);
 
   @Override
   ReactiveWriteStream<T> drainHandler(Handler<Void> handler);
-
-  /**
-   * Calls {@link #close()}.
-   */
-  @Override
-  void end(Handler<AsyncResult<Void>> handler);
 
   /**
    * Close the stream

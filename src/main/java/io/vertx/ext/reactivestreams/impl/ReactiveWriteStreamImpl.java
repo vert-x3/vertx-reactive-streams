@@ -22,6 +22,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.net.impl.ConnectionBase;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
 import org.reactivestreams.Subscriber;
@@ -39,11 +40,11 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   private final Queue<Item<T>> pending = new ArrayDeque<>();
   private Handler<Void> drainHandler;
   private int writeQueueMaxSize = DEFAULT_WRITE_QUEUE_MAX_SIZE;
-  protected final Context ctx;
+  protected final ContextInternal ctx;
   private boolean closed;
 
   public ReactiveWriteStreamImpl(Vertx vertx) {
-    ctx = vertx.getOrCreateContext();
+    ctx = (ContextInternal) vertx.getOrCreateContext();
   }
 
   private void checkClosed() {
@@ -73,16 +74,11 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
 
   @Override
   public synchronized Future<Void> write(T data) {
-    Promise<Void> promise = Promise.promise();
-    write(data, promise);
-    return promise.future();
-  }
-
-  @Override
-  public void write(T data, Handler<AsyncResult<Void>> handler) {
     checkClosed();
-    pending.add(new Item<>(data, handler));
+    Promise<Void> promise = ctx.promise();
+    pending.add(new Item<>(data, promise));
     checkSend();
+    return promise.future();
   }
 
   @Override
@@ -114,11 +110,9 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   }
 
   @Override
-  public void end(Handler<AsyncResult<Void>> handler) {
+  public Future<Void> end() {
     close();
-    if (handler != null) {
-      ctx.runOnContext(v -> handler.handle(Future.succeededFuture()));
-    }
+    return ctx.succeededFuture();
   }
 
   @Override
