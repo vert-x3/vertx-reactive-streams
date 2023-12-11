@@ -20,7 +20,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.streams.Pump;
 import io.vertx.docgen.Source;
 import io.vertx.ext.reactivestreams.ReactiveReadStream;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
@@ -40,10 +39,8 @@ public class ReactiveStreamsExamples {
     // Subscribe the read stream to the publisher
     otherPublisher.subscribe(rrs);
 
-    // Pump from the read stream to the http response
-    Pump pump = Pump.pump(rrs, response);
-
-    pump.start();
+    // Pipe from the read stream to the http response
+    rrs.pipeTo(response);
 
   }
 
@@ -54,9 +51,7 @@ public class ReactiveStreamsExamples {
     // Subscribe the other subscriber to the write stream
     rws.subscribe(otherSubscriber);
 
-    // Pump the http request to the write stream
-    Pump pump = Pump.pump(request, rws);
-
-    pump.start();
+    // Pipe the http request to the write stream
+    request.pipeTo(rws);
   }
 }
