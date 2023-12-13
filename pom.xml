@@ -24,13 +24,13 @@
   </parent>
 
   <artifactId>vertx-reactive-streams</artifactId>
-  <version>4.5.1-SNAPSHOT</version>
+  <version>4.5.1</version>
 
   <name>Vert.x - Reactive Streams</name>
 
   <properties>
     <reactive.streams.version>1.0.3</reactive.streams.version>
-    <stack.version>4.5.1-SNAPSHOT</stack.version>
+    <stack.version>4.5.1</stack.version>
     <jar.manifest>${project.basedir}/src/main/resources/META-INF/MANIFEST.MF</jar.manifest>
   </properties>
 
