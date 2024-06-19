@@ -22,7 +22,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.impl.ContextInternal;
+import io.vertx.core.internal.ContextInternal;
 import io.vertx.core.net.impl.ConnectionBase;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
 import org.reactivestreams.Subscriber;
