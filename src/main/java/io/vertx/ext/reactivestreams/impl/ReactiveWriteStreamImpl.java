@@ -59,13 +59,11 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
 
     SubscriptionImpl sub = new SubscriptionImpl(subscriber);
     if (subscriptions.add(sub)) {
-      ctx.runOnContext(v -> {
-        try {
-          subscriber.onSubscribe(sub);
-        } catch (Throwable t) {
-          signalError(sub.subscriber, t);
-        }
-      });
+      try {
+        subscriber.onSubscribe(sub);
+      } catch (Throwable t) {
+        signalError(sub.subscriber, t);
+      }
     } else {
       throw new IllegalStateException("1.10 Cannot subscribe multiple times with the same subscriber.");
     }
