@@ -28,9 +28,14 @@
 
   <name>Vert.x - Reactive Streams</name>
 
+  <scm>
+    <connection>scm:git:git@github.com:vert-x3/vertx-reactive-streams.git</connection>
+    <developerConnection>scm:git:git@github.com:vert-x3/vertx-reactive-streams.git</developerConnection>
+    <url>git@github.com:vert-x3/vertx-reactive-streams.git</url>
+  </scm>
+
   <properties>
     <reactive.streams.version>1.0.3</reactive.streams.version>
-    <stack.version>5.0.0-SNAPSHOT</stack.version>
     <jar.manifest>${project.basedir}/src/main/resources/META-INF/MANIFEST.MF</jar.manifest>
   </properties>
 
@@ -39,7 +44,7 @@
       <dependency>
         <groupId>io.vertx</groupId>
         <artifactId>vertx-dependencies</artifactId>
-        <version>${stack.version}</version>
+        <version>${project.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
