@@ -16,12 +16,7 @@
 
 package io.vertx.ext.reactivestreams.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
 import io.vertx.core.internal.ContextInternal;
 import io.vertx.core.net.impl.ConnectionBase;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
@@ -126,10 +121,14 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
       subscriptions.clear();
       Future<Void> closedFut = Future.failedFuture(ConnectionBase.CLOSED_EXCEPTION);
       for (Item<T> item: pending) {
-        Handler<AsyncResult<Void>> handler = item.handler;
+        Completable<Void> handler = item.handler;
         if (handler != null) {
           ctx.runOnContext(v -> {
-            handler.handle(closedFut);
+            if (closedFut.succeeded()) {
+              handler.succeed(closedFut.result());
+            } else {
+              handler.fail(closedFut.cause());
+            }
           });
         }
       }
@@ -182,7 +181,7 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
       onNext(ctx, sub.subscriber, item.value);
     }
     if (item.handler != null) {
-      item.handler.handle(Future.succeededFuture());
+      item.handler.succeed();
     }
   }
 
@@ -257,8 +256,8 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
 
   static class Item<T> {
     final T value;
-    final Handler<AsyncResult<Void>> handler;
-    Item(T value, Handler<AsyncResult<Void>> handler) {
+    final Completable<Void> handler;
+    Item(T value, Completable<Void> handler) {
       this.value = value;
       this.handler = handler;
     }
