@@ -18,7 +18,7 @@ package io.vertx.ext.reactivestreams.impl;
 
 import io.vertx.core.*;
 import io.vertx.core.internal.ContextInternal;
-import io.vertx.core.net.impl.ConnectionBase;
+import io.vertx.core.internal.net.NetSocketInternal;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -119,7 +119,7 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
       closed = true;
       complete();
       subscriptions.clear();
-      Future<Void> closedFut = Future.failedFuture(ConnectionBase.CLOSED_EXCEPTION);
+      Future<Void> closedFut = Future.failedFuture(NetSocketInternal.CLOSED_EXCEPTION);
       for (Item<T> item: pending) {
         Completable<Void> handler = item.handler;
         if (handler != null) {
