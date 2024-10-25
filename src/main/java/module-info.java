@@ -1,6 +1,6 @@
 open module io.vertx.reactivestreams {
 
-  requires static vertx.docgen;
+  requires static io.vertx.docgen;
 
   requires io.vertx.core;
   requires org.reactivestreams;
