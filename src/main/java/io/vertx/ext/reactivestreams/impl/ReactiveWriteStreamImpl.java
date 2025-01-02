@@ -23,7 +23,11 @@ import io.vertx.ext.reactivestreams.ReactiveWriteStream;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Objects;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -31,7 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
 
-  private Set<SubscriptionImpl> subscriptions = new HashSet<>();
+  private final Set<SubscriptionImpl> subscriptions = ConcurrentHashMap.newKeySet();
   private final Queue<Item<T>> pending = new ArrayDeque<>();
   private Handler<Void> drainHandler;
   private int writeQueueMaxSize = DEFAULT_WRITE_QUEUE_MAX_SIZE;
