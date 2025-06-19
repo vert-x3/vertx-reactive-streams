@@ -26,7 +26,7 @@
   <artifactId>vertx-reactive-streams</artifactId>
   <version>4.5.16-SNAPSHOT</version>
 
-  <name>Vert.x - Reactive Streams</name>
+  <name>Vert.x Reactive Streams</name>
 
   <scm>
     <connection>scm:git:git@github.com:vert-x3/vertx-reactive-streams.git</connection>
