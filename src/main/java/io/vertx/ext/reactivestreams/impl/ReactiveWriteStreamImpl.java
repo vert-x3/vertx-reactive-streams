@@ -16,12 +16,8 @@
 
 package io.vertx.ext.reactivestreams.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
+import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.net.impl.ConnectionBase;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
 import org.reactivestreams.Subscriber;
@@ -53,21 +49,30 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
   }
 
   @Override
-  public synchronized void subscribe(Subscriber<? super T> subscriber) {
-    checkClosed();
+  public void subscribe(Subscriber<? super T> subscriber) {
     Objects.requireNonNull(subscriber);
+    SubscriptionImpl sub;
+    synchronized (this) {
+      checkClosed();
+      sub = new SubscriptionImpl(subscriber);
+      if (!subscriptions.add(sub)) {
+        throw new IllegalStateException("1.10 Cannot subscribe multiple times with the same subscriber.");
+      }
+    }
+    invokeOnSubscribe(subscriber, sub);
+  }
 
-    SubscriptionImpl sub = new SubscriptionImpl(subscriber);
-    if (subscriptions.add(sub)) {
-      ctx.runOnContext(v -> {
-        try {
-          subscriber.onSubscribe(sub);
-        } catch (Throwable t) {
-          signalError(sub.subscriber, t);
-        }
-      });
+  private void invokeOnSubscribe(Subscriber<? super T> subscriber, SubscriptionImpl sub) {
+    if (ctx.equals(ContextInternal.current())) {
+      try {
+        subscriber.onSubscribe(sub);
+      } catch (Throwable t) {
+        signalError(sub.subscriber, t);
+      }
     } else {
-      throw new IllegalStateException("1.10 Cannot subscribe multiple times with the same subscriber.");
+      ctx.runOnContext(v -> {
+        invokeOnSubscribe(subscriber, sub);
+      });
     }
   }
 
@@ -269,5 +274,4 @@ public class ReactiveWriteStreamImpl<T> implements ReactiveWriteStream<T> {
       this.handler = handler;
     }
   }
-
 }
