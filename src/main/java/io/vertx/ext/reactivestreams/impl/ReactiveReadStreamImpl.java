@@ -102,6 +102,7 @@ public class ReactiveReadStreamImpl<T> implements ReactiveReadStream<T> {
       subscription.cancel();
     } else {
       this.subscription = subscription;
+      checkRequestTokens();
     }
   }
 
