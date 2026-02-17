@@ -39,7 +39,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     assertNotNull(publisher.subscription);
-    assertEquals(0, publisher.subscription.requestedTimes);
+    assertEquals(1, publisher.subscription.requestedTimes);
   }
 
   @Test
@@ -48,7 +48,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     assertNotNull(publisher.subscription);
-    assertEquals(0, publisher.subscription.requestedTimes);
+    assertEquals(1, publisher.subscription.requestedTimes);
     List<Buffer> received = new ArrayList<>();
     rws.handler(received::add);
     assertEquals(1, publisher.subscription.requestedTimes);
@@ -69,12 +69,12 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
   @Test
   public void testSetPausedDataHandler() throws Exception {
     ReactiveReadStream<Buffer> rws = ReactiveReadStream.readStream();
+    rws.pause();
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     assertNotNull(publisher.subscription);
     assertEquals(0, publisher.subscription.requestedTimes);
     List<Buffer> received = new ArrayList<>();
-    rws.pause();
     rws.handler(received::add);
     assertEquals(0, publisher.subscription.requestedTimes);
     assertEquals(0, publisher.subscription.requested);
@@ -102,7 +102,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     assertNotNull(publisher.subscription);
-    assertEquals(0, publisher.subscription.requestedTimes);
+    assertEquals(1, publisher.subscription.requestedTimes);
     List<Buffer> received = new ArrayList<>();
     rws.handler(buff -> {
       received.add(buff);
@@ -128,7 +128,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     assertNotNull(publisher.subscription);
-    assertEquals(0, publisher.subscription.requestedTimes);
+    assertEquals(1, publisher.subscription.requestedTimes);
     List<Buffer> received = new ArrayList<>();
     rws.handler(received::add);
     assertEquals(1, publisher.subscription.requestedTimes);
@@ -166,7 +166,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     assertNotNull(publisher.subscription);
-    assertEquals(0, publisher.subscription.requestedTimes);
+    assertEquals(1, publisher.subscription.requestedTimes);
     List<Buffer> received = new ArrayList<>();
     rws.handler(buff -> {
       rws.pause();
@@ -194,7 +194,7 @@ public class ReactiveReadStreamTest extends ReactiveStreamTestBase {
     MyPublisher publisher = new MyPublisher();
     publisher.subscribe(rws);
     assertNotNull(publisher.subscription);
-    assertEquals(0, publisher.subscription.requestedTimes);
+    assertEquals(1, publisher.subscription.requestedTimes);
     List<Buffer> received = new ArrayList<>();
     rws.handler(received::add);
     assertEquals(1, publisher.subscription.requestedTimes);
