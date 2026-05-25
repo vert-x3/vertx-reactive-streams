@@ -16,7 +16,6 @@
 
 package io.vertx.ext.reactivestreams.test;
 
-import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;

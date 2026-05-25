@@ -1,6 +1,5 @@
 package io.vertx.ext.reactivestreams.tck;
 
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.reactivestreams.ReactiveWriteStream;
